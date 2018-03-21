@@ -41,3 +41,29 @@ class Dynamics1D(object):
             Step the dynamics
         """
         return np.dot(self.discrete[0], state)+np.dot(self.discrete[1], command)
+
+
+class Dynamics2D(Dynamics1D):
+    """
+        A fourth-order two-dimensional dynamical system.
+    """
+    def __init__(self):
+        super(Dynamics2D, self).__init__()
+
+        self.continuous_dynamics()
+        self.discrete_dynamics()
+
+    def continuous_dynamics(self):
+        """
+            Continuous state-space model
+        """
+        a, b = self.A, self.B
+
+        self.A = np.vstack((np.hstack((np.array(a), np.zeros(np.shape(a)))),
+                            np.hstack((np.zeros(np.shape(a)), np.array(a)))))
+        self.B = np.vstack((np.hstack((np.array(b), np.zeros(np.shape(b)))),
+                            np.hstack((np.zeros(np.shape(b)), np.array(b)))))
+        self.C = np.identity(np.shape(self.A)[0])
+        self.D = np.zeros(np.shape(self.B))
+
+        self.continuous = (self.A, self.B, self.C, self.D)
