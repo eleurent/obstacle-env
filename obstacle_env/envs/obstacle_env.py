@@ -1,3 +1,6 @@
+from __future__ import print_function, division
+import numpy as np
+
 import gym
 from gym import spaces
 
@@ -10,10 +13,12 @@ class ObstacleEnv(gym.Env):
     SIMULATION_FREQUENCY = 30
     POLICY_FREQUENCY = 1
 
-    ACTIONS = {0: 'UP',
-               1: 'DOWN',
-               2: 'LEFT',
-               3: 'RIGHT'}
+    ACTIONS = {
+        0: 'IDLE',
+        1: 'UP',
+        2: 'DOWN',
+        3: 'LEFT',
+        4: 'RIGHT'}
     ACTIONS_INDEXES = {v: k for k, v in ACTIONS.items()}
 
     def __init__(self):
@@ -22,36 +27,16 @@ class ObstacleEnv(gym.Env):
         self.grid = PolarGrid(self.scene)
         self.viewer = None
         self.done = False
-
-    def observation(self):
-        """
-            Return the observation of the current state, which must be consistent with self.observation_space.
-        :return: the observation
-        """
-        return self.grid.trace(self.dynamics.position)
-
-    def reward(self, action):
-        """
-            Return the reward associated with performing a given action and ending up in the current state.
-
-        :param action: the last action performed
-        :return: the reward
-        """
-        return 0
-
-    def is_terminal(self):
-        """
-            Check whether the current state is a terminal state
-        :return:is the state terminal
-        """
-        return False
+        self.desired_action = self.ACTIONS_INDEXES['IDLE']
 
     def reset(self):
         """
             Reset the environment to it's initial configuration
         :return: the observation of the reset state
         """
-        raise NotImplementedError()
+        self.dynamics.state *= 0
+
+        return self._observation()
 
     def step(self, action):
         """
@@ -73,12 +58,12 @@ class ObstacleEnv(gym.Env):
                 self.render()
 
             # Stop at terminal states
-            if self.done or self.is_terminal():
+            if self.done or self._is_terminal():
                 break
 
-        obs = self.observation()
-        reward = self.reward(action)
-        terminal = self.is_terminal()
+        obs = self._observation()
+        reward = self._reward(action)
+        terminal = self._is_terminal()
         info = {}
 
         return obs, reward, terminal, info
@@ -110,69 +95,33 @@ class ObstacleEnv(gym.Env):
             self.viewer.close()
         self.viewer = None
 
-    def get_available_actions(self):
+    def _observation(self):
         """
-            Get the list of currently available actions.
+            Return the observation of the current state, which must be consistent with self.observation_space.
 
-            Lane changes are not available on the boundary of the road, and velocity changes are not available at
-            maximal or minimal velocity.
-
-        :return: the list of available actions
+            It is a single vector of size 37 composed of:
+            - 2 velocities
+            - a one-hot encoding of the 5 actions
+            - a vector of range measurements in 30 directions
+        :return: the observation
         """
-        actions = [self.ACTIONS_INDEXES['IDLE']]
-        li = self.vehicle.lane_index
-        if li > 0 \
-                and self.road.lanes[li-1].is_reachable_from(self.vehicle.position):
-            actions.append(self.ACTIONS_INDEXES['LANE_LEFT'])
-        if li < len(self.road.lanes) - 1 \
-                and self.road.lanes[li+1].is_reachable_from(self.vehicle.position):
-            actions.append(self.ACTIONS_INDEXES['LANE_RIGHT'])
-        if self.vehicle.velocity_index < self.vehicle.SPEED_COUNT - 1:
-            actions.append(self.ACTIONS_INDEXES['FASTER'])
-        if self.vehicle.velocity_index > 0:
-            actions.append(self.ACTIONS_INDEXES['SLOWER'])
-        return actions
+        velocities = self.dynamics.velocity
+        ranges = self.grid.trace(self.dynamics.position)
 
-    # def change_agents_to(self, agent_type):
-    #     """
-    #         Change the type of all agents on the road
-    #     :param agent_type: The new type of agents
-    #     :return: a new RoadMDP with modified agents type
-    #     """
-    #     state_copy = copy.deepcopy(self)
-    #     vehicles = state_copy.ego_vehicle.road.vehicles
-    #     for i, v in enumerate(vehicles):
-    #         if v is not state_copy.ego_vehicle and not isinstance(v, Obstacle):
-    #             vehicles[i] = agent_type.create_from(v)
-    #     return state_copy
-
-    def simplified(self):
+    def _reward(self, action):
         """
-            Return a simplified copy of the environment where distant vehicles have been removed from the road.
+            Return the reward associated with performing a given action and ending up in the current state.
 
-            This is meant to lower the policy computational load while preserving the optimal actions set.
+        :param action: the last action performed
+        :return: the reward
+        """
+        desired_command = self.dynamics.action_to_command(self.desired_action)
+        command = self.dynamics.action_to_command(action)
+        return np.linalg.norm(desired_command - command)
 
-        :return: a simplified environment state
+    def _is_terminal(self):
         """
-        state_copy = copy.deepcopy(self)
-        ev = state_copy.vehicle
-        close_vehicles = []
-        for v in state_copy.road.vehicles:
-            if -self.PERCEPTION_DISTANCE/2 < ev.lane_distance_to(v) < self.PERCEPTION_DISTANCE:
-                close_vehicles.append(v)
-        state_copy.road.vehicles = close_vehicles
-        return state_copy
-
-    def __deepcopy__(self, memo):
+            Check whether the current state is a terminal state
+        :return:is the state terminal
         """
-            Perform a deep copy but without copying the environment viewer.
-        """
-        cls = self.__class__
-        result = cls.__new__(cls)
-        memo[id(self)] = result
-        for k, v in self.__dict__.items():
-            if k != 'viewer':
-                setattr(result, k, copy.deepcopy(v, memo))
-            else:
-                setattr(result, k, None)
-        return result
+        return False

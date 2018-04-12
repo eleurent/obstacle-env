@@ -1,5 +1,4 @@
-from __future__ import print_function
-from __future__ import division
+from __future__ import print_function, division
 import numpy as np
 from scipy import signal
 
@@ -72,6 +71,9 @@ class Dynamics2D(Dynamics1D):
     """
         A fourth-order two-dimensional dynamical system.
     """
+
+    ACCELERATION_COMMAND = 5
+
     def __init__(self, state=None):
         super(Dynamics2D, self).__init__()
 
@@ -81,7 +83,7 @@ class Dynamics2D(Dynamics1D):
         if state is None:
             state = np.zeros((np.shape(self.A)[0], 1))
         self.state = state
-        self.command = np.zeros((1, 2))
+        self.command = np.zeros((2, 1))
 
     def continuous_dynamics_2d(self):
         """
@@ -99,18 +101,25 @@ class Dynamics2D(Dynamics1D):
         self.continuous = (self.A, self.B, self.C, self.D)
 
     def act(self, action):
+        self.command = self.action_to_command(action)
+
+    def action_to_command(self, action):
         if action == 'UP':
-            self.command = np.array([[0], [1]])
+            command = np.array([[0], [1]])
         elif action == 'DOWN':
-            self.command = np.array([[0], [-1]])
+            command = np.array([[0], [-1]])
         elif action == 'RIGHT':
-            self.command = np.array([[1], [0]])
+            command = np.array([[1], [0]])
         elif action == 'LEFT':
-            self.command = np.array([[-1], [0]])
+            command = np.array([[-1], [0]])
         else:
-            self.command = np.array([[0], [0]])
-        self.command *= 2
+            command = np.array([[0], [0]])
+        return command * self.ACCELERATION_COMMAND
 
     @property
     def position(self):
         return self.state[0::4, 0, np.newaxis]
+
+    @property
+    def velocity(self):
+        return self.state[1::4, 0, np.newaxis]

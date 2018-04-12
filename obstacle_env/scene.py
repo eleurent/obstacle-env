@@ -1,5 +1,4 @@
-from __future__ import print_function
-from __future__ import division
+from __future__ import print_function, division
 import numpy as np
 import math
 
@@ -20,7 +19,7 @@ class Scene2D(object):
 
 
 class PolarGrid:
-    def __init__(self, scene, cells=100):
+    def __init__(self, scene, cells=32):
         self.scene = scene
         self.cells = cells
         self.angle = 2 * math.pi / self.cells
@@ -35,6 +34,8 @@ class PolarGrid:
             center_angle = self.position_to_angle(obstacle['position'])
             center_distance = np.linalg.norm(obstacle['position'] - origin)
             half_angle = math.acos(math.sqrt(max(1-(obstacle['radius']/center_distance)**2, 0)))
+            center_index = self.angle_to_index(center_angle)
+            self.grid[center_index] = min(self.grid[center_index], center_distance - obstacle['radius'])
             start, end = self.angle_to_index(center_angle - half_angle), self.angle_to_index(center_angle + half_angle)
             if start < end:
                 indexes = np.arange(start, end+1)

@@ -1,5 +1,4 @@
-from __future__ import print_function
-from __future__ import division
+from __future__ import print_function, division
 
 import datetime
 import shutil
@@ -7,6 +6,8 @@ import shutil
 import numpy as np
 import pygame
 import os
+
+from obstacle_env.scene import PolarGrid
 
 
 class EnvViewer(object):
@@ -45,8 +46,8 @@ class EnvViewer(object):
             if event.type == pygame.QUIT:
                 self.env.close()
             self.sim_surface.handle_event(event)
-            # if self.env.dynamics:
-                # DynamicsGraphics.handle_event(self.env.vehicle, event)
+            if self.env.dynamics:
+                DynamicsGraphics.handle_event(self.env.dynamics, event)
 
     def display(self):
         """
@@ -54,7 +55,10 @@ class EnvViewer(object):
         """
         self.sim_surface.move_display_window_to(self.window_position())
         Scene2dGraphics.display(self.env.scene, self.sim_surface)
-        Scene2dGraphics.display_dynamics(self.env.dynamics, self.sim_surface)
+        DynamicsGraphics.display(self.env.dynamics, self.sim_surface)
+        grid = PolarGrid(self.env.scene)
+        grid.trace(self.env.dynamics.position)
+        DynamicsGraphics.display_grid(grid, self.sim_surface)
         self.screen.blit(self.sim_surface, (0, 0))
         self.clock.tick(self.env.SIMULATION_FREQUENCY)
         pygame.display.flip()
@@ -150,7 +154,7 @@ class SimulationSurface(pygame.Surface):
         :param y: y world coordinate [m]
         :return: the coordinates of the corresponding pixel [px]
         """
-        return self.pix(x - self.origin[0, 0]), self.pix(y - self.origin[1, 0])
+        return self.pix(x - self.origin[0, 0]), self.pix(-y + self.origin[1, 0])
 
     def vec2pix(self, vec):
         """
@@ -171,7 +175,7 @@ class SimulationSurface(pygame.Surface):
         :param position: a world position [m]
         """
         self.origin = position - np.array(
-            [[self.centering_position * self.get_width() / self.scaling], [self.get_height() / (2 * self.scaling)]])
+            [[self.centering_position * self.get_width() / self.scaling], [-self.get_height() / (2 * self.scaling)]])
 
     def handle_event(self, event):
         """
@@ -201,14 +205,34 @@ class Scene2dGraphics(object):
             position = surface.pos2pix(obstacle['position'][0, 0], obstacle['position'][1, 0])
             pygame.draw.circle(surface, Scene2dGraphics.GREY, position, surface.pix(obstacle['radius']), 0)
 
+
+class DynamicsGraphics(object):
+    GRID_MAX_RANGE = 15
+    GREY = (100, 100, 100)
+
     @staticmethod
-    def display_dynamics(dynamics, surface):
+    def display(dynamics, surface):
         position = surface.pos2pix(dynamics.position[0, 0], dynamics.position[1, 0])
         pygame.draw.circle(surface, Scene2dGraphics.GREY, position, surface.pix(0.2), 1)
 
-    # def display(self, ax):
-    #     psi = np.repeat(np.arange(0, 2 * math.pi, 2 * math.pi / np.size(self.grid)), 2)
-    #     psi = np.hstack((psi[1:], [psi[0], psi[0]]))
-    #     r = np.repeat(np.minimum(self.grid, CircularGrid.DISPLAY_DISTANCE_MAX), 2)
-    #     r = np.hstack((r, [r[0]]))
-    #     ax.plot(self.origin[0]+r*np.cos(psi), self.origin[1]+r*np.sin(psi), 'k')
+    @staticmethod
+    def display_grid(grid, surface):
+        psi = np.repeat(np.arange(0, 2 * np.pi, 2 * np.pi / np.size(grid.grid)), 2)
+        psi = np.hstack((psi[1:], [psi[0]]))
+        r = np.repeat(np.minimum(grid.grid, DynamicsGraphics.GRID_MAX_RANGE), 2)
+        # ax.plot(self.origin[0] + r * np.cos(psi), self.origin[1] + r * np.sin(psi), 'k')
+        points = [(surface.pos2pix(grid.origin[0] + r[i] * np.cos(psi[i]), grid.origin[1] + r[i] * np.sin(psi[i])))
+                  for i in range(np.size(psi))]
+        pygame.draw.lines(surface, Scene2dGraphics.GREY, True, points, 1)
+
+    @staticmethod
+    def handle_event(dynamics, event):
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_RIGHT:
+                dynamics.act("RIGHT")
+            if event.key == pygame.K_LEFT:
+                dynamics.act("LEFT")
+            if event.key == pygame.K_DOWN:
+                dynamics.act("DOWN")
+            if event.key == pygame.K_UP:
+                dynamics.act("UP")
