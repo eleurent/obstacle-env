@@ -10,7 +10,8 @@ class Dynamics1D(object):
     DEFAULT_PARAMS = {'Cx': 1.0,
                       'w0': 50.0,
                       'zeta': 1.0,
-                      'dt': 1/30}
+                      'dt': 1/30,
+                      'acceleration': 5}
 
     def __init__(self, state=None, params=None):
         self.A = self.B = self.C = self.D = None
@@ -26,6 +27,8 @@ class Dynamics1D(object):
             state = np.zeros((np.shape(self.A)[0], 1))
         self.state = state
         self.command = np.zeros((1, 1))
+
+        self.crashed = False
 
     def continuous_dynamics(self):
         """
@@ -63,16 +66,19 @@ class Dynamics1D(object):
         """
         self.state = np.dot(self.discrete[0], self.state)+np.dot(self.discrete[1], self.command)
 
+    @property
     def position(self):
         return self.state[0, 0]
+
+    @property
+    def terminal_velocity(self):
+        return self.params['acceleration']/self.params['Cx']
 
 
 class Dynamics2D(Dynamics1D):
     """
         A fourth-order two-dimensional dynamical system.
     """
-
-    ACCELERATION_COMMAND = 5
 
     def __init__(self, state=None):
         super(Dynamics2D, self).__init__()
@@ -114,7 +120,13 @@ class Dynamics2D(Dynamics1D):
             command = np.array([[-1], [0]])
         else:
             command = np.array([[0], [0]])
-        return command * self.ACCELERATION_COMMAND
+        return command * self.params['acceleration']
+
+    def check_collisions(self, scene):
+        position = self.position
+        for obstacle in scene.obstacles:
+            if np.linalg.norm(position - obstacle['position']) < obstacle['radius']:
+                self.crashed = True
 
     @property
     def position(self):

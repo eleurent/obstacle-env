@@ -12,15 +12,10 @@ from obstacle_env.scene import PolarGrid
 
 class EnvViewer(object):
     """
-        A viewer to render a highway driving environment.
+        A viewer to render an environment.
     """
     SCREEN_WIDTH = 400
     SCREEN_HEIGHT = 400
-
-    # TODO: move video recording to a monitoring wrapper
-    VIDEO_SPEED = 2
-    OUT_FOLDER = 'out'
-    TMP_FOLDER = os.path.join(OUT_FOLDER, 'tmp')
 
     def __init__(self, env, record_video=True):
         self.env = env
@@ -32,11 +27,6 @@ class EnvViewer(object):
         self.screen = pygame.display.set_mode([self.SCREEN_WIDTH, self.SCREEN_HEIGHT])
         self.sim_surface = SimulationSurface(panel_size, 0, pygame.Surface(panel_size))
         self.clock = pygame.time.Clock()
-
-        if self.record_video:
-            self.frame = 0
-            self.make_video_dir()
-            self.video_name = 'obstacle_{}'.format(datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S'))
 
     def handle_events(self):
         """
@@ -63,12 +53,6 @@ class EnvViewer(object):
         self.clock.tick(self.env.SIMULATION_FREQUENCY)
         pygame.display.flip()
 
-        if self.record_video:
-            self.frame += 1
-            pygame.image.save(self.screen, "{}/{}_{:04d}.bmp".format(self.TMP_FOLDER,
-                                                                     self.video_name,
-                                                                     self.frame))
-
     def window_position(self):
         """
         :return: the world position of the center of the displayed window.
@@ -78,42 +62,11 @@ class EnvViewer(object):
         else:
             return np.array([0, 0])
 
-    def make_video_dir(self):
-        """
-            Make a temporary directory to hold the rendered images. If already existing, clear it.
-        """
-        if not os.path.exists(self.OUT_FOLDER):
-            os.mkdir(self.OUT_FOLDER)
-        self.clear_video_dir()
-        os.mkdir(self.TMP_FOLDER)
-
-    def clear_video_dir(self):
-        """
-            Clear the temporary directory containing the rendered images.
-        """
-        if os.path.exists(self.TMP_FOLDER):
-            shutil.rmtree(self.TMP_FOLDER, ignore_errors=True)
-
     def close(self):
         """
             Close the pygame window.
-
-            If video frames were recorded, convert them to a video/gif file
         """
         pygame.quit()
-        if self.record_video:
-            os.system("ffmpeg -r {3} -i {0}/{2}_%04d.bmp -vcodec libx264 -crf 25 {1}/{2}.avi"
-                      .format(self.TMP_FOLDER,
-                              self.OUT_FOLDER,
-                              self.video_name,
-                              self.VIDEO_SPEED * self.env.SIMULATION_FREQUENCY))
-            delay = int(np.round(100 / (self.VIDEO_SPEED * self.env.SIMULATION_FREQUENCY)))
-            os.system("convert -delay {3} -loop 0 {0}/{2}*.bmp {1}/{2}.gif"
-                      .format(self.TMP_FOLDER,
-                              self.OUT_FOLDER,
-                              self.video_name,
-                              delay))
-            self.clear_video_dir()
 
 
 class SimulationSurface(pygame.Surface):
@@ -207,7 +160,6 @@ class Scene2dGraphics(object):
 
 
 class DynamicsGraphics(object):
-    GRID_MAX_RANGE = 15
     GREY = (100, 100, 100)
 
     @staticmethod
@@ -219,7 +171,7 @@ class DynamicsGraphics(object):
     def display_grid(grid, surface):
         psi = np.repeat(np.arange(0, 2 * np.pi, 2 * np.pi / np.size(grid.grid)), 2)
         psi = np.hstack((psi[1:], [psi[0]]))
-        r = np.repeat(np.minimum(grid.grid, DynamicsGraphics.GRID_MAX_RANGE), 2)
+        r = np.repeat(np.minimum(grid.grid, grid.MAXIMUM_RANGE), 2)
         # ax.plot(self.origin[0] + r * np.cos(psi), self.origin[1] + r * np.sin(psi), 'k')
         points = [(surface.pos2pix(grid.origin[0] + r[i] * np.cos(psi[i]), grid.origin[1] + r[i] * np.sin(psi[i])))
                   for i in range(np.size(psi))]

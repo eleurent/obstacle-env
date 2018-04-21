@@ -12,6 +12,7 @@ from obstacle_env.scene import Scene2D, PolarGrid
 class ObstacleEnv(gym.Env):
     SIMULATION_FREQUENCY = 30
     POLICY_FREQUENCY = 1
+    MAX_DURATION = 30
 
     ACTIONS = {
         0: 'IDLE',
@@ -27,14 +28,18 @@ class ObstacleEnv(gym.Env):
         self.grid = PolarGrid(self.scene)
         self.viewer = None
         self.done = False
-        self.desired_action = self.ACTIONS_INDEXES['IDLE']
+        self.desired_action = self.ACTIONS_INDEXES['RIGHT']
+        self.action_space = spaces.Discrete(len(self.ACTIONS))
+        self.steps = 0
 
     def reset(self):
         """
             Reset the environment to it's initial configuration
         :return: the observation of the reset state
         """
+        self.steps = 0
         self.dynamics.state *= 0
+        self.dynamics.crashed = False
 
         return self._observation()
 
@@ -52,6 +57,7 @@ class ObstacleEnv(gym.Env):
         # Simulate
         for k in range(int(self.SIMULATION_FREQUENCY // self.POLICY_FREQUENCY)):
             self.dynamics.step()
+            self.dynamics.check_collisions(self.scene)
 
             # Render simulation
             if self.viewer is not None:
@@ -65,6 +71,8 @@ class ObstacleEnv(gym.Env):
         reward = self._reward(action)
         terminal = self._is_terminal()
         info = {}
+
+        self.steps += 1
 
         return obs, reward, terminal, info
 
@@ -100,13 +108,17 @@ class ObstacleEnv(gym.Env):
             Return the observation of the current state, which must be consistent with self.observation_space.
 
             It is a single vector of size 37 composed of:
-            - 2 velocities
-            - a one-hot encoding of the 5 actions
-            - a vector of range measurements in 30 directions
+            - 2 normalized velocities
+            - 2 desired commands
+            - a vector of normalized range measurements in 30 directions
         :return: the observation
         """
-        velocities = self.dynamics.velocity
+        velocities = self.dynamics.velocity / self.dynamics.terminal_velocity
+        desired_command = self.dynamics.action_to_command(self.desired_action)
         ranges = self.grid.trace(self.dynamics.position)
+        ranges = np.minimum(ranges, self.grid.MAXIMUM_RANGE)/self.grid.MAXIMUM_RANGE
+        observation = np.vstack((velocities, desired_command, ranges))
+        return observation
 
     def _reward(self, action):
         """
@@ -117,11 +129,11 @@ class ObstacleEnv(gym.Env):
         """
         desired_command = self.dynamics.action_to_command(self.desired_action)
         command = self.dynamics.action_to_command(action)
-        return np.linalg.norm(desired_command - command)
+        return 2*self.dynamics.params['acceleration'] - np.linalg.norm(desired_command - command)
 
     def _is_terminal(self):
         """
             Check whether the current state is a terminal state
         :return:is the state terminal
         """
-        return False
+        return self.dynamics.crashed or self.steps > self.MAX_DURATION

@@ -15,11 +15,18 @@ class Scene2D(object):
     BOUNDS = 10
 
     def __init__(self):
-        self.obstacles = [{'position': np.array([[self.BOUNDS], [self.BOUNDS]]), 'radius': 1}]
+        self.obstacles = \
+            [
+                {'position': np.array([[self.BOUNDS], [0]]), 'radius': 1},
+                {'position': np.array([[2*self.BOUNDS], [2]]), 'radius': 1},
+                {'position': np.array([[2*self.BOUNDS], [-2]]), 'radius': 1},
+            ]
 
 
 class PolarGrid:
-    def __init__(self, scene, cells=32):
+    MAXIMUM_RANGE = 10
+
+    def __init__(self, scene, cells=8):
         self.scene = scene
         self.cells = cells
         self.angle = 2 * math.pi / self.cells
