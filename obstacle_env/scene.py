@@ -68,7 +68,7 @@ class PolarGrid:
         return self.grid
 
     def position_to_angle(self, position):
-        return np.arctan2(position[1, 0] - self.origin[1, 0], position[0, 0] - self.origin[0, 0])
+        return np.arctan2(position[1, 0] - self.origin[1, 0], position[0, 0] - self.origin[0, 0]) + self.angle/2
 
     def position_to_index(self, position):
         return self.angle_to_index(self.position_to_angle(position))
@@ -77,7 +77,7 @@ class PolarGrid:
         return int(math.floor(angle / self.angle)) % self.cells
 
     def index_to_direction(self, index):
-        return np.array([[math.cos((index + 0.5) * self.angle)], [math.sin((index + 0.5) * self.angle)]])
+        return np.array([[math.cos(index * self.angle)], [math.sin(index * self.angle)]])
 
     @staticmethod
     def distance_to_circle(center, radius, direction):

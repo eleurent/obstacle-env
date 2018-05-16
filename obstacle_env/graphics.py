@@ -176,7 +176,7 @@ class DynamicsGraphics(object):
 
     @staticmethod
     def display_grid(grid, surface):
-        psi = np.repeat(np.arange(0, 2 * np.pi, 2 * np.pi / np.size(grid.grid)), 2)
+        psi = np.repeat(np.arange(-grid.angle/2, 2 * np.pi - grid.angle/2, 2 * np.pi / np.size(grid.grid)), 2)
         psi = np.hstack((psi[1:], [psi[0]]))
         r = np.repeat(np.minimum(grid.grid, grid.MAXIMUM_RANGE), 2)
         # ax.plot(self.origin[0] + r * np.cos(psi), self.origin[1] + r * np.sin(psi), 'k')
