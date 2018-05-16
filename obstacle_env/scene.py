@@ -12,15 +12,27 @@ class Scene1D(object):
 
 
 class Scene2D(object):
-    BOUNDS = 10
+    BOUNDS_X = 25
+    BOUNDS_Y = 25
 
     def __init__(self):
-        self.obstacles = \
-            [
-                {'position': np.array([[self.BOUNDS], [0]]), 'radius': 1},
-                {'position': np.array([[2*self.BOUNDS], [2]]), 'radius': 1},
-                {'position': np.array([[2*self.BOUNDS], [-2]]), 'radius': 1},
-            ]
+        self.obstacles = []
+        # for y in np.linspace(-self.BOUNDS_Y, self.BOUNDS_Y, int(self.BOUNDS_Y)+1):
+        #     self.obstacles.append({'position': np.array([[-self.BOUNDS_X], [y]]), 'radius': 1})
+        # for x in np.linspace(-self.BOUNDS_X, 5*self.BOUNDS_X, int(3*self.BOUNDS_Y)+1):
+        #     self.obstacles.append({'position': np.array([[x], [-self.BOUNDS_Y]]), 'radius': 1})
+        #     self.obstacles.append({'position': np.array([[x], [self.BOUNDS_Y]]), 'radius': 1})
+        # self.obstacles.extend([
+        #     {'position': np.array([[10], [0]]), 'radius': 1},
+        #     {'position': np.array([[20], [2]]), 'radius': 1},
+        #     {'position': np.array([[20], [-2]]), 'radius': 1},
+        # ])
+        for _ in range(100):
+            o = np.zeros((2, 1))
+            while np.linalg.norm(o) < 2:
+                o = np.array([[self.BOUNDS_X * (np.random.rand() * 2 - 1)],
+                              [self.BOUNDS_Y * (np.random.rand() * 2 - 1)]])
+            self.obstacles.append({'position': o, 'radius': 1})
 
 
 class PolarGrid:
