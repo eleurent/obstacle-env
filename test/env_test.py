@@ -1,24 +1,82 @@
 from __future__ import print_function, division
-
 import gym
-from gym.wrappers import Monitor
+
 import obstacle_env
+from test.single_trajectory import SingleTrajectoryAgent
 
 
-def test(episodes=3):
+def test_random(episodes=1):
     env = gym.make('obstacle-v0')
-    monitor = Monitor(env, directory='out', force=True)
     for i in range(episodes):
-        print(i)
-        observation = monitor.reset()
+        env.reset()
         done = False
         while not done:
             action = env.action_space.sample()
-            observation, reward, done, info = monitor.step(action)
-            monitor.render()
-            # print(observation)
-    monitor.close()
+            observation, reward, done, info = env.step(action)
+            env.render()
+    env.close()
 
 
-if __name__ == "__main__":
-    test()
+def test_up(episodes=1):
+    env = gym.make('obstacle-v0')
+    agent = SingleTrajectoryAgent([], env.ACTIONS_INDEXES['UP'])
+    for i in range(episodes):
+        env.reset()
+        done = False
+        while not done:
+            action = agent.act()
+            observation, reward, done, info = env.step(action)
+            env.render()
+    env.close()
+
+
+def test_left(episodes=1):
+    env = gym.make('obstacle-v0')
+    agent = SingleTrajectoryAgent([], env.ACTIONS_INDEXES['LEFT'])
+    for i in range(episodes):
+        env.reset()
+        done = False
+        while not done:
+            action = agent.act()
+            observation, reward, done, info = env.step(action)
+            env.render()
+    env.close()
+
+
+def test_down(episodes=1):
+    env = gym.make('obstacle-v0')
+    agent = SingleTrajectoryAgent([], env.ACTIONS_INDEXES['DOWN'])
+    for i in range(episodes):
+        env.reset()
+        done = False
+        while not done:
+            action = agent.act()
+            observation, reward, done, info = env.step(action)
+            env.render()
+    env.close()
+
+
+def test_right(episodes=1):
+    env = gym.make('obstacle-v0')
+    agent = SingleTrajectoryAgent([], env.ACTIONS_INDEXES['RIGHT'])
+    for i in range(episodes):
+        env.reset()
+        done = False
+        while not done:
+            action = agent.act()
+            observation, reward, done, info = env.step(action)
+            env.render()
+    env.close()
+
+
+def test_idle(episodes=1):
+    env = gym.make('obstacle-v0')
+    agent = SingleTrajectoryAgent([], env.ACTIONS_INDEXES['IDLE'])
+    for i in range(episodes):
+        env.reset()
+        done = False
+        while not done:
+            action = agent.act()
+            observation, reward, done, info = env.step(action)
+            env.render()
+    env.close()
