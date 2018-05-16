@@ -10,7 +10,9 @@ from obstacle_env.scene import Scene2D, PolarGrid
 
 
 class ObstacleEnv(gym.Env):
-    SIMULATION_FREQUENCY = 30
+    metadata = {'render.modes': ['human', 'rgb_array']}
+
+    SIMULATION_FREQUENCY = 10
     POLICY_FREQUENCY = 2
     MAX_DURATION = 20
     GRID_CELLS = 16
@@ -21,7 +23,6 @@ class ObstacleEnv(gym.Env):
         self.dynamics = Dynamics2D(params=params)
         self.dynamics.desired_action = self.dynamics.ACTIONS_INDEXES['RIGHT']
         self.grid = PolarGrid(self.scene, cells=self.GRID_CELLS)
-        self.viewer = None
         self.done = False
         self.action_space = spaces.Discrete(len(self.dynamics.ACTIONS))
 
@@ -33,6 +34,11 @@ class ObstacleEnv(gym.Env):
                               self.grid.MAXIMUM_RANGE * np.ones((self.grid.cells,)),))
         self.observation_space = spaces.Box(low=low_obs, high=high_obs, dtype=np.float32)
         self.steps = 0
+
+        self.viewer = None
+        self.automatic_rendering_callback = None
+        self.should_update_rendering = True
+        self.rendering_mode = 'human'
         self.enable_auto_render = False
 
     def reset(self):
@@ -64,8 +70,7 @@ class ObstacleEnv(gym.Env):
             self.dynamics.check_collisions(self.scene)
 
             # Render simulation
-            if self.viewer is not None and self.enable_auto_render:
-                self.render()
+            self._automatic_rendering()
 
             # Stop at terminal states
             if self.done or self._is_terminal():
@@ -81,6 +86,22 @@ class ObstacleEnv(gym.Env):
 
         return obs, reward, terminal, info
 
+    def _automatic_rendering(self):
+        """
+            Automatically render the intermediate frames while an action is still ongoing.
+            This allows to render the whole video and not only single steps corresponding to agent decision-making.
+
+            If a callback has been set, use it to perform the rendering. This is useful for the environment wrappers
+            such as video-recording monitor that need to access these intermediate renderings.
+        """
+        if self.viewer is not None and self.enable_auto_render:
+            self.should_update_rendering = True
+
+            if self.automatic_rendering_callback:
+                self.automatic_rendering_callback()
+            else:
+                self.render(self.rendering_mode)
+
     def render(self, mode='human'):
         """
             Render the environment.
@@ -88,15 +109,24 @@ class ObstacleEnv(gym.Env):
             Create a viewer if none exists, and use it to render an image.
         :param mode: the rendering mode
         """
+        self.rendering_mode = mode
+
         if self.viewer is None:
             self.viewer = EnvViewer(self, record_video=False)
+
         self.enable_auto_render = True
 
-        if mode == 'rgb_array':
-            raise NotImplementedError()
-        elif mode == 'human':
+        # If the frame has already been rendered, do nothing
+        if self.should_update_rendering:
             self.viewer.display()
+
+        if mode == 'rgb_array':
+            image = self.viewer.get_image()
             self.viewer.handle_events()
+            return image
+        elif mode == 'human':
+            self.viewer.handle_events()
+        self.should_update_rendering = False
 
     def close(self):
         """
