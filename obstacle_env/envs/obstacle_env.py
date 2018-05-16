@@ -11,8 +11,8 @@ from obstacle_env.scene import Scene2D, PolarGrid
 
 class ObstacleEnv(gym.Env):
     SIMULATION_FREQUENCY = 30
-    POLICY_FREQUENCY = 1
-    MAX_DURATION = 30
+    POLICY_FREQUENCY = 2
+    MAX_DURATION = 15
 
     ACTIONS = {
         0: 'IDLE',
@@ -30,6 +30,7 @@ class ObstacleEnv(gym.Env):
         self.done = False
         self.desired_action = self.ACTIONS_INDEXES['RIGHT']
         self.action_space = spaces.Discrete(len(self.ACTIONS))
+
         low_obs = np.hstack((-self.dynamics.terminal_velocity * np.ones((2,)),
                              -self.dynamics.params['acceleration'] * np.ones((2,)),
                              0 * np.ones((self.grid.cells,)),))
@@ -74,12 +75,11 @@ class ObstacleEnv(gym.Env):
             if self.done or self._is_terminal():
                 break
 
+        self.steps += 1
         obs = self._observation()
         reward = self._reward(action)
         terminal = self._is_terminal()
         info = {}
-
-        self.steps += 1
 
         return obs, reward, terminal, info
 
@@ -143,4 +143,4 @@ class ObstacleEnv(gym.Env):
             Check whether the current state is a terminal state
         :return:is the state terminal
         """
-        return self.dynamics.crashed or self.steps > self.MAX_DURATION
+        return self.dynamics.crashed or self.steps >= self.MAX_DURATION
