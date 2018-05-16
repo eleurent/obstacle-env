@@ -80,8 +80,8 @@ class Dynamics2D(Dynamics1D):
         A fourth-order two-dimensional dynamical system.
     """
 
-    def __init__(self, state=None):
-        super(Dynamics2D, self).__init__()
+    def __init__(self, state=None, params=None):
+        super(Dynamics2D, self).__init__(params)
 
         self.continuous_dynamics_2d()
         self.discrete_dynamics()

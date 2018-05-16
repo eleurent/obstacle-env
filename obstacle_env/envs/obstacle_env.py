@@ -24,8 +24,9 @@ class ObstacleEnv(gym.Env):
 
     def __init__(self):
         self.scene = Scene2D()
-        self.dynamics = Dynamics2D()
-        self.grid = PolarGrid(self.scene)
+        params = Dynamics2D.DEFAULT_PARAMS.update({'dt': 1/self.SIMULATION_FREQUENCY})
+        self.dynamics = Dynamics2D(params=params)
+        self.grid = PolarGrid(self.scene, cells=self.GRID_CELLS)
         self.viewer = None
         self.done = False
         self.desired_action = self.ACTIONS_INDEXES['RIGHT']
@@ -47,7 +48,7 @@ class ObstacleEnv(gym.Env):
         :return: the observation of the reset state
         """
         self.steps = 0
-        self.scene = Scene2D()
+        self.scene.create_random_scene()
         self.dynamics.state *= 0
         self.dynamics.crashed = False
 
