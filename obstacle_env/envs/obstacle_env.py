@@ -30,6 +30,13 @@ class ObstacleEnv(gym.Env):
         self.done = False
         self.desired_action = self.ACTIONS_INDEXES['RIGHT']
         self.action_space = spaces.Discrete(len(self.ACTIONS))
+        low_obs = np.hstack((-self.dynamics.terminal_velocity * np.ones((2,)),
+                             -self.dynamics.params['acceleration'] * np.ones((2,)),
+                             0 * np.ones((self.grid.cells,)),))
+        high_obs = np.hstack((self.dynamics.terminal_velocity * np.ones((2,)),
+                              self.dynamics.params['acceleration'] * np.ones((2,)),
+                              self.grid.MAXIMUM_RANGE * np.ones((self.grid.cells,)),))
+        self.observation_space = spaces.Box(low=low_obs, high=high_obs, dtype=np.float32)
         self.steps = 0
 
     def reset(self):
