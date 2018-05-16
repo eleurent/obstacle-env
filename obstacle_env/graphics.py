@@ -161,11 +161,18 @@ class Scene2dGraphics(object):
 
 class DynamicsGraphics(object):
     GREY = (100, 100, 100)
+    BLUE = (100, 100, 255)
+    COMMAND_LENGTH = 1
 
     @staticmethod
     def display(dynamics, surface):
         position = surface.pos2pix(dynamics.position[0, 0], dynamics.position[1, 0])
         pygame.draw.circle(surface, Scene2dGraphics.GREY, position, surface.pix(0.2), 1)
+
+        command_position = dynamics.position + dynamics.command * \
+                           DynamicsGraphics.COMMAND_LENGTH / dynamics.params['acceleration']
+        command_pix = surface.pos2pix(command_position[0, 0], command_position[1, 0])
+        pygame.draw.line(surface, DynamicsGraphics.BLUE, position, command_pix)
 
     @staticmethod
     def display_grid(grid, surface):
