@@ -39,6 +39,7 @@ class ObstacleEnv(gym.Env):
                               self.grid.MAXIMUM_RANGE * np.ones((self.grid.cells,)),))
         self.observation_space = spaces.Box(low=low_obs, high=high_obs, dtype=np.float32)
         self.steps = 0
+        self.enable_auto_render = False
 
     def reset(self):
         """
@@ -68,12 +69,14 @@ class ObstacleEnv(gym.Env):
             self.dynamics.check_collisions(self.scene)
 
             # Render simulation
-            if self.viewer is not None:
+            if self.viewer is not None and self.enable_auto_render:
                 self.render()
 
             # Stop at terminal states
             if self.done or self._is_terminal():
                 break
+
+        self.enable_auto_render = False
 
         self.steps += 1
         obs = self._observation()
@@ -92,6 +95,7 @@ class ObstacleEnv(gym.Env):
         """
         if self.viewer is None:
             self.viewer = EnvViewer(self, record_video=False)
+        self.enable_auto_render = True
 
         if mode == 'rgb_array':
             raise NotImplementedError()
