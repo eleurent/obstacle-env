@@ -114,18 +114,20 @@ class ObstacleEnv(gym.Env):
         """
             Return the observation of the current state, which must be consistent with self.observation_space.
 
-            It is a single vector of size 37 composed of:
+            It is a single vector of size 4+N composed of:
             - 2 normalized velocities
-            - 2 desired commands
-            - a vector of normalized range measurements in 30 directions
+            - 2 normalized desired commands
+            - a vector of normalized range measurements in N directions
         :return: the observation
         """
         velocities = self.dynamics.velocity / self.dynamics.terminal_velocity
-        desired_command = self.dynamics.action_to_command(self.desired_action)
+        desired_command = self.dynamics.action_to_command(self.ACTIONS[self.desired_action]) / \
+                          self.dynamics.params['acceleration']
+
         ranges = self.grid.trace(self.dynamics.position)
         ranges = np.minimum(ranges, self.grid.MAXIMUM_RANGE)/self.grid.MAXIMUM_RANGE
         observation = np.vstack((velocities, desired_command, ranges))
-        return observation
+        return np.ravel(observation)
 
     def _reward(self, action):
         """
@@ -134,9 +136,9 @@ class ObstacleEnv(gym.Env):
         :param action: the last action performed
         :return: the reward
         """
-        desired_command = self.dynamics.action_to_command(self.desired_action)
-        command = self.dynamics.action_to_command(action)
-        return 2*self.dynamics.params['acceleration'] - np.linalg.norm(desired_command - command)
+        desired_command = self.dynamics.action_to_command(self.ACTIONS[self.desired_action])
+        command = self.dynamics.action_to_command(self.ACTIONS[action])
+        return (1 - np.linalg.norm(desired_command - command)/(2*self.dynamics.params['acceleration']))**2
 
     def _is_terminal(self):
         """
