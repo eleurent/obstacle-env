@@ -47,6 +47,7 @@ class ObstacleEnv(gym.Env):
         :return: the observation of the reset state
         """
         self.steps = 0
+        self.scene = Scene2D()
         self.dynamics.state *= 0
         self.dynamics.crashed = False
 
