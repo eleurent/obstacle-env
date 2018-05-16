@@ -12,9 +12,9 @@ from obstacle_env.scene import Scene2D, PolarGrid
 class ObstacleEnv(gym.Env):
     metadata = {'render.modes': ['human', 'rgb_array']}
 
-    SIMULATION_FREQUENCY = 10
+    SIMULATION_FREQUENCY = 20
     POLICY_FREQUENCY = 2
-    MAX_DURATION = 20
+    MAX_DURATION = 30
     GRID_CELLS = 16
 
     def __init__(self):

@@ -12,8 +12,8 @@ class Scene1D(object):
 
 
 class Scene2D(object):
-    BOUNDS_X = 25
-    BOUNDS_Y = 25
+    BOUNDS_X = 50
+    BOUNDS_Y = 50
 
     def __init__(self):
         self.obstacles = []
@@ -21,7 +21,7 @@ class Scene2D(object):
 
     def create_random_scene(self):
         self.obstacles = []
-        for _ in range(100):
+        for _ in range(400):
             o = np.zeros((2, 1))
             while np.linalg.norm(o) < 2:
                 o = np.array([[self.BOUNDS_X * (np.random.rand() * 2 - 1)],
@@ -42,7 +42,7 @@ class Scene2D(object):
 
 
 class PolarGrid:
-    MAXIMUM_RANGE = 15
+    MAXIMUM_RANGE = 12
 
     def __init__(self, scene, cells=8):
         self.scene = scene
@@ -56,8 +56,10 @@ class PolarGrid:
         self.grid = np.ones((self.cells, 1)) * float('inf')
 
         for obstacle in self.scene.obstacles:
-            center_angle = self.position_to_angle(obstacle['position'])
             center_distance = np.linalg.norm(obstacle['position'] - origin)
+            if center_distance > self.MAXIMUM_RANGE:
+                continue
+            center_angle = self.position_to_angle(obstacle['position'])
             half_angle = math.acos(math.sqrt(max(1-(obstacle['radius']/center_distance)**2, 0)))
             center_index = self.angle_to_index(center_angle)
             self.grid[center_index] = min(self.grid[center_index], center_distance - obstacle['radius'])
