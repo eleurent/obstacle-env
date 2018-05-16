@@ -19,7 +19,7 @@ def test_random(episodes=1):
 
 def test_up(episodes=1):
     env = gym.make('obstacle-v0')
-    agent = SingleTrajectoryAgent([], env.ACTIONS_INDEXES['UP'])
+    agent = SingleTrajectoryAgent([], env.dynamics.ACTIONS_INDEXES['UP'])
     for i in range(episodes):
         env.reset()
         done = False
@@ -32,7 +32,7 @@ def test_up(episodes=1):
 
 def test_left(episodes=1):
     env = gym.make('obstacle-v0')
-    agent = SingleTrajectoryAgent([], env.ACTIONS_INDEXES['LEFT'])
+    agent = SingleTrajectoryAgent([], env.dynamics.ACTIONS_INDEXES['LEFT'])
     for i in range(episodes):
         env.reset()
         done = False
@@ -45,7 +45,7 @@ def test_left(episodes=1):
 
 def test_down(episodes=1):
     env = gym.make('obstacle-v0')
-    agent = SingleTrajectoryAgent([], env.ACTIONS_INDEXES['DOWN'])
+    agent = SingleTrajectoryAgent([], env.dynamics.ACTIONS_INDEXES['DOWN'])
     for i in range(episodes):
         env.reset()
         done = False
@@ -58,7 +58,7 @@ def test_down(episodes=1):
 
 def test_right(episodes=1):
     env = gym.make('obstacle-v0')
-    agent = SingleTrajectoryAgent([], env.ACTIONS_INDEXES['RIGHT'])
+    agent = SingleTrajectoryAgent([], env.dynamics.ACTIONS_INDEXES['RIGHT'])
     for i in range(episodes):
         env.reset()
         done = False
@@ -71,7 +71,7 @@ def test_right(episodes=1):
 
 def test_idle(episodes=1):
     env = gym.make('obstacle-v0')
-    agent = SingleTrajectoryAgent([], env.ACTIONS_INDEXES['IDLE'])
+    agent = SingleTrajectoryAgent([], env.dynamics.ACTIONS_INDEXES['IDLE'])
     for i in range(episodes):
         env.reset()
         done = False

@@ -187,10 +187,10 @@ class DynamicsGraphics(object):
     def handle_event(dynamics, event):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RIGHT:
-                dynamics.act("RIGHT")
+                dynamics.desired_action = 4
             if event.key == pygame.K_LEFT:
-                dynamics.act("LEFT")
+                dynamics.desired_action = 3
             if event.key == pygame.K_DOWN:
-                dynamics.act("DOWN")
+                dynamics.desired_action = 2
             if event.key == pygame.K_UP:
-                dynamics.act("UP")
+                dynamics.desired_action = 1

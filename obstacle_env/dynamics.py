@@ -27,6 +27,7 @@ class Dynamics1D(object):
             state = np.zeros((np.shape(self.A)[0], 1))
         self.state = state
         self.command = np.zeros((1, 1))
+        self.desired_action = 0
 
         self.crashed = False
 
@@ -80,6 +81,14 @@ class Dynamics2D(Dynamics1D):
         A fourth-order two-dimensional dynamical system.
     """
 
+    ACTIONS = {
+        0: 'IDLE',
+        1: 'UP',
+        2: 'DOWN',
+        3: 'LEFT',
+        4: 'RIGHT'}
+    ACTIONS_INDEXES = {v: k for k, v in ACTIONS.items()}
+
     def __init__(self, state=None, params=None):
         super(Dynamics2D, self).__init__(params)
 
@@ -110,13 +119,13 @@ class Dynamics2D(Dynamics1D):
         self.command = self.action_to_command(action)
 
     def action_to_command(self, action):
-        if action == 'UP':
+        if self.ACTIONS[action] == 'UP':
             command = np.array([[0], [1]])
-        elif action == 'DOWN':
+        elif self.ACTIONS[action] == 'DOWN':
             command = np.array([[0], [-1]])
-        elif action == 'RIGHT':
+        elif self.ACTIONS[action] == 'RIGHT':
             command = np.array([[1], [0]])
-        elif action == 'LEFT':
+        elif self.ACTIONS[action] == 'LEFT':
             command = np.array([[-1], [0]])
         else:
             command = np.array([[0], [0]])

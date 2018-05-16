@@ -15,23 +15,15 @@ class ObstacleEnv(gym.Env):
     MAX_DURATION = 20
     GRID_CELLS = 16
 
-    ACTIONS = {
-        0: 'IDLE',
-        1: 'UP',
-        2: 'DOWN',
-        3: 'LEFT',
-        4: 'RIGHT'}
-    ACTIONS_INDEXES = {v: k for k, v in ACTIONS.items()}
-
     def __init__(self):
         self.scene = Scene2D()
         params = Dynamics2D.DEFAULT_PARAMS.update({'dt': 1/self.SIMULATION_FREQUENCY})
         self.dynamics = Dynamics2D(params=params)
+        self.dynamics.desired_action = self.dynamics.ACTIONS_INDEXES['RIGHT']
         self.grid = PolarGrid(self.scene, cells=self.GRID_CELLS)
         self.viewer = None
         self.done = False
-        self.desired_action = self.ACTIONS_INDEXES['RIGHT']
-        self.action_space = spaces.Discrete(len(self.ACTIONS))
+        self.action_space = spaces.Discrete(len(self.dynamics.ACTIONS))
 
         low_obs = np.hstack((-self.dynamics.terminal_velocity * np.ones((2,)),
                              -self.dynamics.params['acceleration'] * np.ones((2,)),
@@ -64,7 +56,7 @@ class ObstacleEnv(gym.Env):
         :return: a tuple (observation, reward, terminal, info)
         """
         # Forward action to the dynamics
-        self.dynamics.act(self.ACTIONS[action])
+        self.dynamics.act(action)
 
         # Simulate
         for k in range(int(self.SIMULATION_FREQUENCY // self.POLICY_FREQUENCY)):
@@ -128,7 +120,7 @@ class ObstacleEnv(gym.Env):
         :return: the observation
         """
         velocities = self.dynamics.velocity / self.dynamics.terminal_velocity
-        desired_command = self.dynamics.action_to_command(self.ACTIONS[self.desired_action]) / \
+        desired_command = self.dynamics.action_to_command(self.dynamics.desired_action) / \
                           self.dynamics.params['acceleration']
 
         ranges = self.grid.trace(self.dynamics.position)
@@ -143,8 +135,8 @@ class ObstacleEnv(gym.Env):
         :param action: the last action performed
         :return: the reward
         """
-        desired_command = self.dynamics.action_to_command(self.ACTIONS[self.desired_action])
-        command = self.dynamics.action_to_command(self.ACTIONS[action])
+        desired_command = self.dynamics.action_to_command(self.dynamics.desired_action)
+        command = self.dynamics.action_to_command(action)
         return (1 - np.linalg.norm(desired_command - command)/(2*self.dynamics.params['acceleration']))**2
 
     def _is_terminal(self):
