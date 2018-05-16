@@ -12,7 +12,8 @@ from obstacle_env.scene import Scene2D, PolarGrid
 class ObstacleEnv(gym.Env):
     SIMULATION_FREQUENCY = 30
     POLICY_FREQUENCY = 2
-    MAX_DURATION = 15
+    MAX_DURATION = 20
+    GRID_CELLS = 16
 
     ACTIONS = {
         0: 'IDLE',

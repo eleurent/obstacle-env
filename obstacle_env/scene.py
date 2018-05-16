@@ -42,7 +42,7 @@ class Scene2D(object):
 
 
 class PolarGrid:
-    MAXIMUM_RANGE = 10
+    MAXIMUM_RANGE = 15
 
     def __init__(self, scene, cells=8):
         self.scene = scene
