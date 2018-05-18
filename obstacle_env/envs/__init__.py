@@ -1,1 +1,1 @@
-from obstacle_env.envs.obstacle_env import ObstacleEnv
+from obstacle_env.envs.obstacle import ObstacleEnv
