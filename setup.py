@@ -18,7 +18,7 @@ setup(
 
     keywords='environment reinforcement learning',
     packages=find_packages(exclude=['docs', 'test*']),
-    install_requires=['gym', 'numpy', 'pygame'],
+    install_requires=['gym', 'numpy', 'scipy', 'pygame'],
     tests_require=['pytest'],
     extras_require={
         'deploy': ['pytest-runner']
