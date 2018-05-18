@@ -13,7 +13,6 @@ def test_random(episodes=1):
         while not done:
             action = env.action_space.sample()
             observation, reward, done, info = env.step(action)
-            env.render()
     env.close()
 
 
@@ -26,7 +25,6 @@ def test_up(episodes=1):
         while not done:
             action = agent.act()
             observation, reward, done, info = env.step(action)
-            env.render()
     env.close()
 
 
@@ -39,7 +37,6 @@ def test_left(episodes=1):
         while not done:
             action = agent.act()
             observation, reward, done, info = env.step(action)
-            env.render()
     env.close()
 
 
@@ -52,7 +49,6 @@ def test_down(episodes=1):
         while not done:
             action = agent.act()
             observation, reward, done, info = env.step(action)
-            env.render()
     env.close()
 
 
@@ -65,7 +61,6 @@ def test_right(episodes=1):
         while not done:
             action = agent.act()
             observation, reward, done, info = env.step(action)
-            env.render()
     env.close()
 
 
@@ -78,5 +73,4 @@ def test_idle(episodes=1):
         while not done:
             action = agent.act()
             observation, reward, done, info = env.step(action)
-            env.render()
     env.close()
