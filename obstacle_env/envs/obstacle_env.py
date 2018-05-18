@@ -12,7 +12,7 @@ from obstacle_env.scene import Scene2D, PolarGrid
 class ObstacleEnv(gym.Env):
     metadata = {'render.modes': ['human', 'rgb_array']}
 
-    SIMULATION_FREQUENCY = 20
+    SIMULATION_FREQUENCY = 10
     POLICY_FREQUENCY = 2
     MAX_DURATION = 30
     GRID_CELLS = 16
@@ -21,7 +21,7 @@ class ObstacleEnv(gym.Env):
         self.scene = Scene2D()
         params = Dynamics2D.DEFAULT_PARAMS.update({'dt': 1/self.SIMULATION_FREQUENCY})
         self.dynamics = Dynamics2D(params=params)
-        self.dynamics.desired_action = self.dynamics.ACTIONS_INDEXES['RIGHT']
+        self.dynamics.desired_action = np.random.randint(1, len(self.dynamics.ACTIONS))
         self.grid = PolarGrid(self.scene, cells=self.GRID_CELLS)
         self.done = False
         self.action_space = spaces.Discrete(len(self.dynamics.ACTIONS))
@@ -50,6 +50,7 @@ class ObstacleEnv(gym.Env):
         self.scene.create_random_scene()
         self.dynamics.state *= 0
         self.dynamics.crashed = False
+        self.dynamics.desired_action = np.random.randint(1, len(self.dynamics.ACTIONS))
 
         return self._observation()
 
@@ -167,7 +168,8 @@ class ObstacleEnv(gym.Env):
         """
         desired_command = self.dynamics.action_to_command(self.dynamics.desired_action)
         command = self.dynamics.action_to_command(action)
-        return (1 - np.linalg.norm(desired_command - command)/(2*self.dynamics.params['acceleration']))**2
+        return (1 - np.linalg.norm(desired_command - command)/(2*self.dynamics.params['acceleration']))**2 \
+               - 10*self.dynamics.crashed
 
     def _is_terminal(self):
         """
