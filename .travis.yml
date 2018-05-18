@@ -9,4 +9,4 @@ install:
   - pip install -e .[deploy]
 
 script:
-  - pytest
+  - python -m pytest test/
