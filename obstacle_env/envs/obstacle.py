@@ -3,6 +3,7 @@ import numpy as np
 
 import gym
 from gym import spaces
+from gym.utils import seeding
 
 from obstacle_env.dynamics import Dynamics2D
 from obstacle_env.graphics import EnvViewer
@@ -17,14 +18,22 @@ class ObstacleEnv(gym.Env):
     GRID_CELLS = 16
 
     def __init__(self):
-        self.scene = Scene2D()
+        # Seeding
+        self.np_random = None
+        self.seed()
+
+        # Dynamics
         params = Dynamics2D.DEFAULT_PARAMS.update({'dt': 1/self.SIMULATION_FREQUENCY})
         self.dynamics = Dynamics2D(params=params)
-        self.dynamics.desired_action = np.random.randint(1, len(self.dynamics.ACTIONS))
-        self.grid = PolarGrid(self.scene, cells=self.GRID_CELLS)
-        self.done = False
-        self.action_space = spaces.Discrete(len(self.dynamics.ACTIONS))
+        self.dynamics.desired_action = self.np_random.randint(1, len(self.dynamics.ACTIONS))
 
+        # Scene
+        self.scene = Scene2D()
+        self.scene.create_random_scene(np_random=self.np_random)
+        self.grid = PolarGrid(self.scene, cells=self.GRID_CELLS)
+
+        # Spaces
+        self.action_space = spaces.Discrete(len(self.dynamics.ACTIONS))
         low_obs = np.hstack((-self.dynamics.terminal_velocity * np.ones((2,)),
                              -self.dynamics.params['acceleration'] * np.ones((2,)),
                              0 * np.ones((self.grid.cells,)),))
@@ -32,13 +41,20 @@ class ObstacleEnv(gym.Env):
                               self.dynamics.params['acceleration'] * np.ones((2,)),
                               self.grid.MAXIMUM_RANGE * np.ones((self.grid.cells,)),))
         self.observation_space = spaces.Box(low=low_obs, high=high_obs, dtype=np.float32)
-        self.steps = 0
 
+        # Viewer
         self.viewer = None
         self.automatic_rendering_callback = None
         self.should_update_rendering = True
         self.rendering_mode = 'human'
         self.enable_auto_render = False
+
+        self.steps = 0
+        self.done = False
+
+    def seed(self, seed=None):
+        self.np_random, seed = seeding.np_random(seed)
+        return [seed]
 
     def reset(self):
         """
@@ -46,10 +62,10 @@ class ObstacleEnv(gym.Env):
         :return: the observation of the reset state
         """
         self.steps = 0
-        self.scene.create_random_scene()
+        self.scene.create_random_scene(np_random=self.np_random)
         self.dynamics.state *= 0
         self.dynamics.crashed = False
-        self.dynamics.desired_action = np.random.randint(1, len(self.dynamics.ACTIONS))
+        self.dynamics.desired_action = self.np_random.randint(1, len(self.dynamics.ACTIONS))
 
         return self._observation()
 
