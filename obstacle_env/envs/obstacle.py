@@ -14,7 +14,6 @@ class ObstacleEnv(gym.Env):
 
     SIMULATION_FREQUENCY = 10
     POLICY_FREQUENCY = 2
-    MAX_DURATION = 30
     GRID_CELLS = 16
 
     def __init__(self):
@@ -176,4 +175,4 @@ class ObstacleEnv(gym.Env):
             Check whether the current state is a terminal state
         :return:is the state terminal
         """
-        return self.dynamics.crashed or self.steps >= self.MAX_DURATION
+        return self.dynamics.crashed
