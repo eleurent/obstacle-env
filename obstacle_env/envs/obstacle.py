@@ -1,7 +1,6 @@
 from __future__ import print_function, division
 import copy
 import numpy as np
-
 import gym
 from gym import spaces
 from gym.utils import seeding
@@ -17,6 +16,7 @@ class ObstacleEnv(gym.Env):
     SIMULATION_FREQUENCY = 10
     POLICY_FREQUENCY = 2
     GRID_CELLS = 16
+    COLLISION_REWARD = -10
 
     def __init__(self):
         # Seeding
@@ -24,7 +24,7 @@ class ObstacleEnv(gym.Env):
         self.seed()
 
         # Dynamics
-        params = Dynamics2D.DEFAULT_PARAMS.update({'dt': 1/self.SIMULATION_FREQUENCY})
+        params = Dynamics2D.DEFAULT_PARAMS.update({'dt': 1 / self.SIMULATION_FREQUENCY})
         self.dynamics = Dynamics2D(params=params)
         self.dynamics.desired_action = self.np_random.randint(1, len(self.dynamics.ACTIONS))
 
@@ -171,7 +171,7 @@ class ObstacleEnv(gym.Env):
                           self.dynamics.params['acceleration']
 
         ranges = self.grid.trace(self.dynamics.position)
-        ranges = np.minimum(ranges, self.grid.MAXIMUM_RANGE)/self.grid.MAXIMUM_RANGE
+        ranges = np.minimum(ranges, self.grid.MAXIMUM_RANGE) / self.grid.MAXIMUM_RANGE
         observation = np.vstack((velocities, desired_command, ranges))
         return np.ravel(observation)
 
@@ -184,8 +184,8 @@ class ObstacleEnv(gym.Env):
         """
         desired_command = self.dynamics.action_to_command(self.dynamics.desired_action)
         command = self.dynamics.action_to_command(action)
-        return (1 - np.linalg.norm(desired_command - command)/(2*self.dynamics.params['acceleration']))**2 \
-               - 10*self.dynamics.crashed
+        return (1 - np.linalg.norm(desired_command - command) / (2 * self.dynamics.params['acceleration'])) ** 2 + \
+               self.COLLISION_REWARD * self.dynamics.crashed
 
     def _is_terminal(self):
         """
