@@ -1,4 +1,5 @@
 from __future__ import print_function, division
+import copy
 import numpy as np
 
 import gym
@@ -192,3 +193,17 @@ class ObstacleEnv(gym.Env):
         :return:is the state terminal
         """
         return self.dynamics.crashed
+
+    def __deepcopy__(self, memo):
+        """
+            Perform a deep copy but without copying the environment viewer.
+        """
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            if k not in ['viewer', 'automatic_rendering_callback']:
+                setattr(result, k, copy.deepcopy(v, memo))
+            else:
+                setattr(result, k, None)
+        return result
