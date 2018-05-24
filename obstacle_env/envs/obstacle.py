@@ -207,3 +207,17 @@ class ObstacleEnv(gym.Env):
             else:
                 setattr(result, k, None)
         return result
+
+    def simplified(self):
+        """
+            Return a simplified copy of the environment where distant vehicles have been removed from the road.
+
+            This is meant to lower the policy computational load while preserving the optimal actions set.
+
+        :return: a simplified environment state
+        """
+        state_copy = copy.deepcopy(self)
+        obstacles_close = [obstacle for obstacle in state_copy.scene.obstacles
+                           if np.linalg.norm(obstacle['position'] - self.dynamics.position) < 2*state_copy.grid.MAXIMUM_RANGE]
+        state_copy.scene.obstacles = obstacles_close
+        return state_copy
