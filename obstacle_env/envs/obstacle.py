@@ -60,6 +60,7 @@ class ObstacleEnv(gym.Env):
         self.done = False
         self.trajectory = []
         self.interval_trajectory = []
+        self.automatic_record_callback = None
 
     def configure(self, config):
         self.config.update(config)
@@ -101,6 +102,8 @@ class ObstacleEnv(gym.Env):
             self.store_data()
             self.dynamics.step()
             self.dynamics.check_collisions(self.scene)
+            if self.automatic_record_callback:
+                self.automatic_record_callback(self.dynamics.state, self.dynamics.derivative, self.dynamics.control)
             if self.lpv:
                 self.lpv.set_control((self.dynamics.B @ self.dynamics.control).squeeze(-1))
                 self.lpv.step(1 / self.config["simulation_frequency"])
@@ -205,18 +208,18 @@ class ObstacleEnv(gym.Env):
         :return: the reward
         """
         if self.lpv is not None:
-            return self.pessimistic_reward(self.lpv.x_i_t)
+            return self.pessimistic_reward(action, self.lpv.x_i_t)
         if self.scene.goal:
             d = np.linalg.norm(self.scene.goal["position"] - self.dynamics.position)
             d0 = 10
-            reward = 1/(1+d/d0)
+            reward = (action > 0)/(1+d/d0)
         else:
             desired_control = self.dynamics.action_to_control(self.dynamics.desired_action)
             control = self.dynamics.action_to_control(action)
             reward = (1 - np.linalg.norm(desired_control - control) / (2 * self.dynamics.params['acceleration'])) ** 2
         return remap(reward + self.config["collision_reward"] * self.dynamics.crashed, [-1, 1], [0, 1])
 
-    def pessimistic_reward(self, interval):
+    def pessimistic_reward(self, action, interval):
         """
             Return the reward associated with performing a given action and ending up in the current state.
 
@@ -232,7 +235,7 @@ class ObstacleEnv(gym.Env):
         if self.scene.goal:
             d = np.linalg.norm(self.scene.goal["position"] - np.mean(corners, axis=0)[:, np.newaxis])
             d0 = 10
-            reward = 1/(1+d/d0)
+            reward = (action > 0)/(1+d/d0)
         return remap(reward + self.config["collision_reward"] * collision, [-1, 1], [0, 1])
 
     def pessimistic_is_terminal(self, interval):
@@ -263,7 +266,7 @@ class ObstacleEnv(gym.Env):
         result = cls.__new__(cls)
         memo[id(self)] = result
         for k, v in self.__dict__.items():
-            if k not in ['viewer', 'automatic_rendering_callback']:
+            if k not in ['viewer', 'automatic_rendering_callback', 'automatic_record_callback']:
                 setattr(result, k, copy.deepcopy(v, memo))
             else:
                 setattr(result, k, None)
