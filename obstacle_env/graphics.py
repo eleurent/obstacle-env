@@ -57,7 +57,6 @@ class EnvViewer(object):
         DynamicsGraphics.display(self.env.dynamics, self.sim_surface)
         self.env.grid.trace(self.env.dynamics.position)
         DynamicsGraphics.display_grid(self.env.grid, self.sim_surface)
-        self.screen.blit(self.sim_surface, (0, 0))
 
         if self.agent_display:
             self.agent_display(self.agent_surface, self.sim_surface)
@@ -66,7 +65,8 @@ class EnvViewer(object):
             else:
                 self.screen.blit(self.agent_surface, (self.SCREEN_WIDTH, 0))
 
-        self.clock.tick(self.env.SIMULATION_FREQUENCY)
+        self.screen.blit(self.sim_surface, (0, 0))
+        self.clock.tick(self.env.config["simulation_frequency"])
         pygame.display.flip()
 
     def get_image(self):
@@ -130,7 +130,7 @@ class SimulationSurface(pygame.Surface):
         :param y: y world coordinate [m]
         :return: the coordinates of the corresponding pixel [px]
         """
-        return self.pix(x - self.origin[0, 0]), self.pix(-y + self.origin[1, 0])
+        return self.pix(x - self.origin[0, 0]), self.pix(y - self.origin[1, 0])
 
     def vec2pix(self, vec):
         """
@@ -138,7 +138,7 @@ class SimulationSurface(pygame.Surface):
         :param vec: a world position [m]
         :return: the coordinates of the corresponding pixel [px]
         """
-        return self.pix(vec[0]), self.pix(vec[1])
+        return self.pos2pix(vec[0], vec[1])
 
     def rect(self, rect):
         x, y = self.pos2pix(rect[0], rect[1])
@@ -151,7 +151,7 @@ class SimulationSurface(pygame.Surface):
         :param position: a world position [m]
         """
         self.origin = position - np.array(
-            [[self.centering_position * self.get_width() / self.scaling], [-self.get_height() / (2 * self.scaling)]])
+            [[self.centering_position * self.get_width() / self.scaling], [self.get_height() / (2 * self.scaling)]])
 
     def handle_event(self, event):
         """
