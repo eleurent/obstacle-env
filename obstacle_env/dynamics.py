@@ -98,6 +98,7 @@ class Dynamics2D(Dynamics1D):
         if state is None:
             state = np.zeros((np.shape(self.A)[0], 1))
         self.state = state
+        self.derivative = np.zeros(state.shape)
         self.control = np.zeros((2, 1))
 
     def continuous_dynamics_2d(self):
@@ -117,12 +118,13 @@ class Dynamics2D(Dynamics1D):
 
     def act(self, action):
         self.control = self.action_to_control(action)
+        self.derivative = np.dot(self.continuous[0], self.state)+np.dot(self.continuous[1], self.control)
 
     def action_to_control(self, action):
         if self.ACTIONS[action] == 'UP':
-            control = np.array([[0], [1]])
-        elif self.ACTIONS[action] == 'DOWN':
             control = np.array([[0], [-1]])
+        elif self.ACTIONS[action] == 'DOWN':
+            control = np.array([[0], [1]])
         elif self.ACTIONS[action] == 'RIGHT':
             control = np.array([[1], [0]])
         elif self.ACTIONS[action] == 'LEFT':
