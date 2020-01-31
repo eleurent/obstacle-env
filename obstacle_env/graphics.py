@@ -60,8 +60,11 @@ class EnvViewer(object):
         self.screen.blit(self.sim_surface, (0, 0))
 
         if self.agent_display:
-            self.agent_display(self.agent_surface)
-            self.screen.blit(self.agent_surface, (self.SCREEN_WIDTH, 0))
+            self.agent_display(self.agent_surface, self.sim_surface)
+            if self.SCREEN_WIDTH > self.SCREEN_HEIGHT:
+                self.screen.blit(self.agent_surface, (0, self.SCREEN_HEIGHT))
+            else:
+                self.screen.blit(self.agent_surface, (self.SCREEN_WIDTH, 0))
 
         self.clock.tick(self.env.SIMULATION_FREQUENCY)
         pygame.display.flip()
@@ -170,6 +173,7 @@ class SimulationSurface(pygame.Surface):
 class Scene2dGraphics(object):
     WHITE = (255, 255, 255)
     GREY = (100, 100, 100)
+    GREEN = (50, 150, 50)
 
     @staticmethod
     def display(scene, surface):
@@ -177,6 +181,8 @@ class Scene2dGraphics(object):
         for obstacle in scene.obstacles:
             position = surface.pos2pix(obstacle['position'][0, 0], obstacle['position'][1, 0])
             pygame.draw.circle(surface, Scene2dGraphics.GREY, position, surface.pix(obstacle['radius']), 0)
+        position = surface.pos2pix(scene.goal['position'][0, 0], scene.goal['position'][1, 0])
+        pygame.draw.circle(surface, Scene2dGraphics.GREEN, position, surface.pix(scene.goal['radius']), 0)
 
 
 class DynamicsGraphics(object):
@@ -190,17 +196,17 @@ class DynamicsGraphics(object):
         position = surface.pos2pix(dynamics.position[0, 0], dynamics.position[1, 0])
         pygame.draw.circle(surface, Scene2dGraphics.GREY, position, surface.pix(0.2), 1)
 
-        command_position = dynamics.position + dynamics.command * \
+        control_position = dynamics.position + dynamics.control * \
                            DynamicsGraphics.COMMAND_LENGTH / dynamics.params['acceleration']
-        command_pix = surface.pos2pix(command_position[0, 0], command_position[1, 0])
-        pygame.draw.line(surface, DynamicsGraphics.BLUE, position, command_pix)
+        control_pix = surface.pos2pix(control_position[0, 0], control_position[1, 0])
+        pygame.draw.line(surface, DynamicsGraphics.BLUE, position, control_pix)
 
-        desired_command = dynamics.action_to_command(dynamics.desired_action) / dynamics.params['acceleration']
-        command_position = (20, surface.get_height()-20)
-        command_destination = (command_position[0] + desired_command[0, 0]*10,
-                               command_position[1] + -desired_command[1, 0]*10)
-        pygame.draw.circle(surface, DynamicsGraphics.RED, command_position, 4, 1)
-        pygame.draw.line(surface, DynamicsGraphics.RED, command_position, command_destination, 2)
+        desired_control = dynamics.action_to_control(dynamics.desired_action) / dynamics.params['acceleration']
+        control_position = (20, surface.get_height()-20)
+        control_destination = (control_position[0] + desired_control[0, 0]*10,
+                               control_position[1] + -desired_control[1, 0]*10)
+        pygame.draw.circle(surface, DynamicsGraphics.RED, control_position, 4, 1)
+        pygame.draw.line(surface, DynamicsGraphics.RED, control_position, control_destination, 2)
 
     @staticmethod
     def display_grid(grid, surface):

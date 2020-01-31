@@ -5,7 +5,7 @@ import gym
 from gym import spaces
 from gym.utils import seeding
 
-from obstacle_env.dynamics import Dynamics2D
+from obstacle_env.dynamics import Dynamics2D2
 from obstacle_env.graphics import EnvViewer
 from obstacle_env.scene import Scene2D, PolarGrid
 
@@ -16,7 +16,7 @@ class ObstacleEnv(gym.Env):
     SIMULATION_FREQUENCY = 10
     POLICY_FREQUENCY = 2
     GRID_CELLS = 16
-    COLLISION_REWARD = -10
+    COLLISION_REWARD = -1
 
     def __init__(self):
         # Seeding
@@ -24,8 +24,8 @@ class ObstacleEnv(gym.Env):
         self.seed()
 
         # Dynamics
-        params = Dynamics2D.DEFAULT_PARAMS.update({'dt': 1 / self.SIMULATION_FREQUENCY})
-        self.dynamics = Dynamics2D(params=params)
+        params = Dynamics2D2.DEFAULT_PARAMS.update({'dt': 1 / self.SIMULATION_FREQUENCY})
+        self.dynamics = Dynamics2D2(params=params)
         self.dynamics.desired_action = self.np_random.randint(1, len(self.dynamics.ACTIONS))
 
         # Scene
@@ -162,17 +162,17 @@ class ObstacleEnv(gym.Env):
 
             It is a single vector of size 4+N composed of:
             - 2 normalized velocities
-            - 2 normalized desired commands
+            - 2 normalized desired controls
             - a vector of normalized range measurements in N directions
         :return: the observation
         """
         velocities = self.dynamics.velocity / self.dynamics.terminal_velocity
-        desired_command = self.dynamics.action_to_command(self.dynamics.desired_action) / \
+        desired_control = self.dynamics.action_to_control(self.dynamics.desired_action) / \
                           self.dynamics.params['acceleration']
 
         ranges = self.grid.trace(self.dynamics.position)
         ranges = np.minimum(ranges, self.grid.MAXIMUM_RANGE) / self.grid.MAXIMUM_RANGE
-        observation = np.vstack((velocities, desired_command, ranges))
+        observation = np.vstack((velocities, desired_control, ranges))
         return np.ravel(observation)
 
     def _reward(self, action):
@@ -182,10 +182,15 @@ class ObstacleEnv(gym.Env):
         :param action: the last action performed
         :return: the reward
         """
-        desired_command = self.dynamics.action_to_command(self.dynamics.desired_action)
-        command = self.dynamics.action_to_command(action)
-        return (1 - np.linalg.norm(desired_command - command) / (2 * self.dynamics.params['acceleration'])) ** 2 + \
-               self.COLLISION_REWARD * self.dynamics.crashed
+        if self.scene.goal:
+            d = np.linalg.norm(self.scene.goal["position"] - self.dynamics.position)
+            d0 = 10
+            reward = 1/(1+d/d0)
+        else:
+            desired_control = self.dynamics.action_to_control(self.dynamics.desired_action)
+            control = self.dynamics.action_to_control(action)
+            reward = (1 - np.linalg.norm(desired_control - control) / (2 * self.dynamics.params['acceleration'])) ** 2
+        return remap(reward + self.COLLISION_REWARD * self.dynamics.crashed, [-1, 1], [0, 1])
 
     def _is_terminal(self):
         """
@@ -221,3 +226,12 @@ class ObstacleEnv(gym.Env):
                            if np.linalg.norm(obstacle['position'] - self.dynamics.position) < 2*state_copy.grid.MAXIMUM_RANGE]
         state_copy.scene.obstacles = obstacles_close
         return state_copy
+
+
+def remap(v, x, y, clip=False):
+    if x[1] == x[0]:
+        return y[0]
+    out = y[0] + (v-x[0])*(y[1]-y[0])/(x[1]-x[0])
+    if clip:
+        out = constrain(out, y[0], y[1])
+    return out
