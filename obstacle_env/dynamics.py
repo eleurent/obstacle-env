@@ -65,7 +65,9 @@ class Dynamics1D(object):
         """
             Step the dynamics
         """
-        self.state = np.dot(self.discrete[0], self.state)+np.dot(self.discrete[1], self.control)
+        # self.state = np.dot(self.discrete[0], self.state)+np.dot(self.discrete[1], self.control)
+        diff = np.dot(self.continuous[0], self.state)+np.dot(self.continuous[1], self.control)
+        self.state += diff*self.params["dt"]
 
     @property
     def position(self):
