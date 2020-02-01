@@ -201,12 +201,12 @@ class DynamicsGraphics(object):
         control_pix = surface.pos2pix(control_position[0, 0], control_position[1, 0])
         pygame.draw.line(surface, DynamicsGraphics.BLUE, position, control_pix)
 
-        desired_control = dynamics.action_to_control(dynamics.desired_action) / dynamics.params['acceleration']
-        control_position = (20, surface.get_height()-20)
-        control_destination = (control_position[0] + desired_control[0, 0]*10,
-                               control_position[1] + -desired_control[1, 0]*10)
-        pygame.draw.circle(surface, DynamicsGraphics.RED, control_position, 4, 1)
-        pygame.draw.line(surface, DynamicsGraphics.RED, control_position, control_destination, 2)
+        # desired_control = dynamics.action_to_control(dynamics.desired_action) / dynamics.params['acceleration']
+        # control_position = (20, surface.get_height()-20)
+        # control_destination = (control_position[0] + desired_control[0, 0]*10,
+        #                        control_position[1] + -desired_control[1, 0]*10)
+        # pygame.draw.circle(surface, DynamicsGraphics.RED, control_position, 4, 1)
+        # pygame.draw.line(surface, DynamicsGraphics.RED, control_position, control_destination, 2)
 
     @staticmethod
     def display_grid(grid, surface):

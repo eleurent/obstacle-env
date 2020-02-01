@@ -100,10 +100,11 @@ class ObstacleEnv(gym.Env):
                 self.dynamics.act(action)
 
             self.store_data()
+            state = self.dynamics.state.copy()
             self.dynamics.step()
             self.dynamics.check_collisions(self.scene)
             if self.automatic_record_callback:
-                self.automatic_record_callback(self.dynamics.state, self.dynamics.derivative, self.dynamics.control)
+                self.automatic_record_callback(state, self.dynamics.derivative, self.dynamics.control)
             if self.lpv:
                 self.lpv.set_control((self.dynamics.B @ self.dynamics.control).squeeze(-1))
                 self.lpv.step(1 / self.config["simulation_frequency"])

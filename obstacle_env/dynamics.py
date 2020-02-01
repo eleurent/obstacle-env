@@ -19,6 +19,7 @@ class Dynamics1D(object):
         if params is None:
             params = self.DEFAULT_PARAMS
         self.params = params
+        self.derivative = None
 
         self.continuous_dynamics()
         self.discrete_dynamics()
@@ -66,8 +67,8 @@ class Dynamics1D(object):
             Step the dynamics
         """
         # self.state = np.dot(self.discrete[0], self.state)+np.dot(self.discrete[1], self.control)
-        diff = np.dot(self.continuous[0], self.state)+np.dot(self.continuous[1], self.control)
-        self.state += diff*self.params["dt"]
+        self.derivative = np.dot(self.continuous[0], self.state)+np.dot(self.continuous[1], self.control)
+        self.state += self.derivative*self.params["dt"]
 
     @property
     def position(self):
@@ -88,7 +89,14 @@ class Dynamics2D(Dynamics1D):
         1: 'UP',
         2: 'DOWN',
         3: 'LEFT',
-        4: 'RIGHT'}
+        4: 'RIGHT',
+    }
+    OTHER_ACTIONS = {
+        5: 'UL',
+        6: 'DR',
+        7: 'RU',
+        8: 'LD',
+    }
     ACTIONS_INDEXES = {v: k for k, v in ACTIONS.items()}
 
     def __init__(self, state=None, params=None):
@@ -120,7 +128,6 @@ class Dynamics2D(Dynamics1D):
 
     def act(self, action):
         self.control = self.action_to_control(action)
-        self.derivative = np.dot(self.continuous[0], self.state)+np.dot(self.continuous[1], self.control)
 
     def action_to_control(self, action):
         if self.ACTIONS[action] == 'UP':
@@ -131,6 +138,14 @@ class Dynamics2D(Dynamics1D):
             control = np.array([[1], [0]])
         elif self.ACTIONS[action] == 'LEFT':
             control = np.array([[-1], [0]])
+        elif self.ACTIONS[action] == 'UL':
+            control = np.array([[-1], [-1]])
+        elif self.ACTIONS[action] == 'DR':
+            control = np.array([[1], [1]])
+        elif self.ACTIONS[action] == 'RU':
+            control = np.array([[1], [-1]])
+        elif self.ACTIONS[action] == 'LD':
+            control = np.array([[-1], [1]])
         else:
             control = np.array([[0], [0]])
         return control * self.params['acceleration']
@@ -154,14 +169,6 @@ class Dynamics2D2(Dynamics2D):
     """
         A second-order two-dimensional dynamical system.
     """
-
-    ACTIONS = {
-        0: 'IDLE',
-        1: 'UP',
-        2: 'DOWN',
-        3: 'LEFT',
-        4: 'RIGHT'}
-    ACTIONS_INDEXES = {v: k for k, v in ACTIONS.items()}
 
     def __init__(self, state=None, params=None):
         super().__init__(params)
