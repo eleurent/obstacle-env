@@ -11,7 +11,8 @@ class Dynamics1D(object):
                       'w0': 50.0,
                       'zeta': 1.0,
                       'dt': 1/30,
-                      'acceleration': 5}
+                      'acceleration': 5,
+                      'perturbation': 0.1}
 
     def __init__(self, state=None, params=None):
         self.A = self.B = self.C = self.D = None
@@ -70,6 +71,11 @@ class Dynamics1D(object):
         self.derivative = np.dot(self.continuous[0], self.state)+np.dot(self.continuous[1], self.control)
         self.state += self.derivative*self.params["dt"]
 
+    def add_perturbation(self, np_random):
+        perturbation = self.params["perturbation"] * np_random.randn(*self.state.shape)
+        self.derivative += perturbation
+        self.state += perturbation*self.params["dt"]
+
     @property
     def position(self):
         return self.state[0, 0]
@@ -100,6 +106,7 @@ class Dynamics2D(Dynamics1D):
     ACTIONS_INDEXES = {v: k for k, v in ACTIONS.items()}
 
     def __init__(self, state=None, params=None):
+        # self.ACTIONS.update(self.OTHER_ACTIONS)
         super(Dynamics2D, self).__init__(params)
 
         self.continuous_dynamics_2d()

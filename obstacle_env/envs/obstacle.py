@@ -18,7 +18,8 @@ class ObstacleEnv(gym.Env):
         "policy_frequency": 2,
         "grid_cells": 16,
         "collision_reward": -0.5,
-        "observation_type": "grid"
+        "observation_type": "grid",
+        "observation_noise": 0.1,
     }
 
     def __init__(self):
@@ -102,9 +103,12 @@ class ObstacleEnv(gym.Env):
             self.store_data()
             state = self.dynamics.state.copy()
             self.dynamics.step()
+            self.dynamics.add_perturbation(self.np_random)
             self.dynamics.check_collisions(self.scene)
             if self.automatic_record_callback:
-                self.automatic_record_callback(state, self.dynamics.derivative, self.dynamics.control)
+                observation = self.dynamics.derivative + \
+                              self.config["observation_noise"] * self.np_random.randn(*self.dynamics.derivative.shape)
+                self.automatic_record_callback(state, observation, self.dynamics.control)
             if self.lpv:
                 self.lpv.set_control((self.dynamics.B @ self.dynamics.control).squeeze(-1))
                 self.lpv.step(1 / self.config["simulation_frequency"])
