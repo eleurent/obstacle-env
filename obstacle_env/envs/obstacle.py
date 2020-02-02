@@ -126,6 +126,7 @@ class ObstacleEnv(gym.Env):
         obs = self._observation()
         reward = self._reward(action)
         terminal = self._is_terminal()
+        reward = reward if not terminal else 0
         info = {}
 
         return obs, reward, terminal, info
@@ -244,15 +245,17 @@ class ObstacleEnv(gym.Env):
         return remap(reward + self.config["collision_reward"] * collision, [-1, 1], [0, 1])
 
     def pessimistic_is_terminal(self, interval):
-        corners = np.array([[interval[0, 0], interval[0, 1]],
-                   [interval[0, 0], interval[1, 1]],
-                   [interval[1, 0], interval[0, 1]],
-                   [interval[1, 0], interval[1, 1]]])
-        for position in corners:
-            for obstacle in self.scene.obstacles:
-                if np.linalg.norm(position[:, np.newaxis] - obstacle['position']) < obstacle['radius']:
-                    return True
-        return False
+        if not self.dynamics.crashed:
+            corners = np.array([[interval[0, 0], interval[0, 1]],
+                               [interval[0, 0], interval[1, 1]],
+                               [interval[1, 0], interval[0, 1]],
+                               [interval[1, 0], interval[1, 1]]])
+            for position in corners:
+                for obstacle in self.scene.obstacles:
+                    if np.linalg.norm(position[:, np.newaxis] - obstacle['position']) < obstacle['radius']:
+                        self.dynamics.crashed = True
+                        break
+        return self.dynamics.crashed
 
     def _is_terminal(self):
         """
