@@ -14,8 +14,9 @@ class EnvViewer(object):
     """
         A viewer to render an environment.
     """
-    SCREEN_WIDTH = 400
-    SCREEN_HEIGHT = 400
+    SCREEN_WIDTH = 800
+    SCREEN_HEIGHT = 800
+    SAVE_IMAGES = True
 
     def __init__(self, env, record_video=True):
         self.env = env
@@ -30,6 +31,7 @@ class EnvViewer(object):
 
         self.agent_display = None
         self.agent_surface = None
+        self.frame = 0
 
     def set_agent_display(self, agent_display):
         if self.agent_display is None:
@@ -69,6 +71,10 @@ class EnvViewer(object):
         self.screen.blit(self.sim_surface, (0, 0))
         self.clock.tick(self.env.config["simulation_frequency"])
         pygame.display.flip()
+
+        if self.SAVE_IMAGES:
+            pygame.image.save(self.sim_surface, "out/ObstacleEnv/obstacle-env_{}.png".format(self.frame))
+            self.frame += 1
 
     def get_image(self):
         """
@@ -111,7 +117,7 @@ class SimulationSurface(pygame.Surface):
         """
         super(SimulationSurface, self).__init__(size, flags, surf)
         self.origin = np.array([0, 0])
-        self.scaling = 15.0
+        self.scaling = 40.0
         self.centering_position = 0.5
 
     def pix(self, length):
