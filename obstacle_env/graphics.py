@@ -179,7 +179,7 @@ class SimulationSurface(pygame.Surface):
 
 class Scene2dGraphics(object):
     WHITE = (255, 255, 255)
-    GREY = (100, 100, 100)
+    GREY = (135, 135, 135)
     GREEN = (50, 150, 50)
 
     @staticmethod
