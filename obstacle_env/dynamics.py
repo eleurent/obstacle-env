@@ -177,12 +177,11 @@ class Dynamics2D2(Dynamics2D):
         A second-order two-dimensional dynamical system.
     """
 
-    def __init__(self, state=None, params=None):
-        super().__init__(params)
+    def __init__(self, state=None, params=None, np_random=np.random):
 
         self.A0, self.phi, self.theta = None, None, None
-        self.continuous_dynamics_2d()
-        self.discrete_dynamics()
+        self.np_random = np_random
+        super().__init__(params)
 
         if state is None:
             state = np.zeros((np.shape(self.A)[0], 1))
@@ -205,7 +204,7 @@ class Dynamics2D2(Dynamics2D):
                               [0, 0, 0, 0],
                               [0, 0, 0, 0],
                               [0, 0, 0, -1]]])
-        self.theta = np.array([0.3, 0.3])
+        self.theta = self.np_random.uniform(low=0.1, high=0.5, size=2)
         self.A = self.A0 + np.tensordot(self.theta, self.phi, axes=[0, 0])
         self.B = np.array([[0, 0], [0, 0], [1, 0], [0, 1]])
         self.C = np.identity(self.A.shape[0])
