@@ -16,7 +16,7 @@ class EnvViewer(object):
     """
     SCREEN_WIDTH = 800
     SCREEN_HEIGHT = 800
-    SAVE_IMAGES = True
+    SAVE_IMAGES = False
 
     def __init__(self, env, record_video=True):
         self.env = env

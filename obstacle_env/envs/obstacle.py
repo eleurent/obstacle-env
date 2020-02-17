@@ -14,12 +14,13 @@ class ObstacleEnv(gym.Env):
     metadata = {'render.modes': ['human', 'rgb_array']}
 
     config = {
-        "simulation_frequency": 10,
+        "simulation_frequency": 16,
+        "sensor_frequency": 8,
         "policy_frequency": 2,
         "grid_cells": 16,
         "collision_reward": -0.5,
         "observation_type": "grid",
-        "observation_noise": 0.1,
+        "observation_noise": 0.2,
     }
 
     def __init__(self):
@@ -29,7 +30,7 @@ class ObstacleEnv(gym.Env):
 
         # Dynamics
         params = Dynamics2D2.DEFAULT_PARAMS.update({'dt': 1 / self.config["simulation_frequency"]})
-        self.dynamics = Dynamics2D2(params=params)
+        self.dynamics = Dynamics2D2(params=params, np_random=self.np_random)
         self.dynamics.desired_action = self.np_random.randint(1, len(self.dynamics.ACTIONS))
 
         # Scene
@@ -105,7 +106,8 @@ class ObstacleEnv(gym.Env):
             self.dynamics.step()
             self.dynamics.add_perturbation(self.np_random)
             self.dynamics.check_collisions(self.scene)
-            if self.automatic_record_callback:
+            sensing_time = k % (self.config["simulation_frequency"] // self.config["sensor_frequency"]) == 0
+            if self.automatic_record_callback and sensing_time:
                 observation = self.dynamics.derivative + \
                               self.config["observation_noise"] * self.np_random.randn(*self.dynamics.derivative.shape)
                 self.automatic_record_callback(state, observation, self.dynamics.control)
@@ -117,9 +119,9 @@ class ObstacleEnv(gym.Env):
             # Render simulation
             self._automatic_rendering()
 
-            # Stop at terminal states
-            if self.done or self._is_terminal():
-                break
+            # # Stop at terminal states
+            # if self.done or self._is_terminal():
+            #     break
 
         self.enable_auto_render = False
         self.steps += 1
