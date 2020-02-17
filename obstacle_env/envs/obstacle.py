@@ -20,7 +20,7 @@ class ObstacleEnv(gym.Env):
         "grid_cells": 16,
         "collision_reward": -0.5,
         "observation_type": "grid",
-        "observation_noise": 0.2,
+        "observation_noise": 0.3,
     }
 
     def __init__(self):
@@ -297,15 +297,14 @@ class ObstacleEnv(gym.Env):
         return state_copy
 
     def store_data(self):
-        self.trajectory.append(self.dynamics.state)
         if self.lpv:
             self.interval_trajectory.append(self.lpv.x_i_t)
+            self.trajectory.append(self.lpv.x_t)
+        else:
+            self.trajectory.append(copy.deepcopy(self.dynamics))
 
 
-def remap(v, x, y, clip=False):
+def remap(v, x, y):
     if x[1] == x[0]:
         return y[0]
-    out = y[0] + (v-x[0])*(y[1]-y[0])/(x[1]-x[0])
-    if clip:
-        out = constrain(out, y[0], y[1])
-    return out
+    return y[0] + (v-x[0])*(y[1]-y[0])/(x[1]-x[0])
