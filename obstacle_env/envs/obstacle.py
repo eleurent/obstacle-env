@@ -112,7 +112,7 @@ class ObstacleEnv(gym.Env):
                               self.config["observation_noise"] * self.np_random.randn(*self.dynamics.derivative.shape)
                 self.automatic_record_callback(state, observation, self.dynamics.control)
             if self.lpv:
-                self.lpv.set_control((self.dynamics.B @ self.dynamics.control).squeeze(-1))
+                self.lpv.set_control(self.dynamics.control)
                 self.lpv.step(1 / self.config["simulation_frequency"])
             self.time += 1
 
@@ -302,6 +302,10 @@ class ObstacleEnv(gym.Env):
             self.trajectory.append(self.lpv.x_t)
         else:
             self.trajectory.append(copy.deepcopy(self.dynamics))
+
+    @property
+    def state(self):
+        return self.dynamics.state
 
 
 def remap(v, x, y):
