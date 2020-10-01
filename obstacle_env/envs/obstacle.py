@@ -192,18 +192,21 @@ class ObstacleEnv(gym.Env):
 
             It is a single vector of size 4+N composed of:
             - 2 normalized velocities
-            - 2 normalized desired controls
+            - 2 normalized desired controls or direction to goal
             - a vector of normalized range measurements in N directions
         :return: the observation
         """
         if self.config["observation_type"] == "grid":
             velocities = self.dynamics.velocity / self.dynamics.terminal_velocity
-            desired_control = self.dynamics.action_to_control(self.dynamics.desired_action) / \
+            if self.scene.goal:
+                goal = (self.scene.goal["position"] - self.dynamics.position) / 20
+            else:
+                goal = self.dynamics.action_to_control(self.dynamics.desired_action) / \
                               self.dynamics.params['acceleration']
 
             ranges = self.grid.trace(self.dynamics.position)
             ranges = np.minimum(ranges, self.grid.MAXIMUM_RANGE) / self.grid.MAXIMUM_RANGE
-            observation = np.vstack((velocities, desired_control, ranges))
+            observation = np.vstack((velocities, goal, ranges))
             return np.ravel(observation)
         else:
             return self.dynamics.state
