@@ -50,14 +50,14 @@ class EnvViewer(object):
             if self.env.dynamics:
                 DynamicsGraphics.handle_event(self.env.dynamics, event)
 
-    def display(self, show_grid=False):
+    def display(self):
         """
             Display the scene on a pygame window.
         """
         self.sim_surface.move_display_window_to(self.window_position())
         Scene2dGraphics.display(self.env.scene, self.sim_surface)
-        DynamicsGraphics.display(self.env.dynamics, self.sim_surface)
-        if show_grid:
+        DynamicsGraphics.display(self.env.dynamics, self.sim_surface, show_desired_control=self.env.scene.goal is None)
+        if self.env.config["show_grid"]:
             self.env.grid.trace(self.env.dynamics.position)
             DynamicsGraphics.display_grid(self.env.grid, self.sim_surface)
 
