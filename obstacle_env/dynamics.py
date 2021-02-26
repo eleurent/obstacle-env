@@ -160,16 +160,23 @@ class Dynamics2D(Dynamics1D):
     def check_collisions(self, scene):
         position = self.position
         for obstacle in scene.obstacles:
-            if np.linalg.norm(position - obstacle['position']) < obstacle['radius']:
+            delta = position - obstacle['position']
+            d = np.linalg.norm(delta)
+            if d < obstacle['radius']:
                 self.crashed = True
+                self.position += delta / d * (obstacle['radius'] - d)
 
     @property
     def position(self):
-        return self.state[0::4, 0, np.newaxis]
+        return self.state[0::4, 0:1]
+
+    @position.setter
+    def position(self, value):
+        self.state[0::4, 0:1] = value
 
     @property
     def velocity(self):
-        return self.state[1::4, 0, np.newaxis]
+        return self.state[1::4, 0:1]
 
 
 class Dynamics2D2(Dynamics2D):
@@ -213,8 +220,12 @@ class Dynamics2D2(Dynamics2D):
 
     @property
     def position(self):
-        return self.state[0:2, 0, np.newaxis]
+        return self.state[0:2, 0:1]
+
+    @position.setter
+    def position(self, value):
+        self.state[0:2, 0:1] = value
 
     @property
     def velocity(self):
-        return self.state[2:4, 0, np.newaxis]
+        return self.state[2:4, 0:1]
