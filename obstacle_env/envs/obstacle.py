@@ -121,10 +121,6 @@ class ObstacleEnv(gym.Env):
             # Render simulation
             self._automatic_rendering()
 
-            # # Stop at terminal states
-            # if self.done or self._is_terminal():
-            #     break
-
         self.enable_auto_render = False
         self.steps += 1
         obs = self._observation()

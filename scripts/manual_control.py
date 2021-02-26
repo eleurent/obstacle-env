@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 from gym import wrappers
-from highway_env.wrappers.monitor import MonitorV2
+from gym.wrappers import Monitor
 import gym
 
 import obstacle_env
@@ -8,10 +8,11 @@ import obstacle_env
 
 def run(episodes=1):
     env = gym.make('obstacle-v0')
-    env = MonitorV2(env, 'out', video_callable=wrappers.monitor.capped_cubic_video_schedule)
+    env = Monitor(env, 'out', force=True)
 
-    for i in range(episodes):
+    for _ in range(episodes):
         env.reset()
+        env.unwrapped.automatic_rendering_callback = env.video_recorder.capture_frame  # Capture in-between frames
         done = False
         while not done:
             action = env.unwrapped.dynamics.desired_action
