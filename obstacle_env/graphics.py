@@ -14,8 +14,8 @@ class EnvViewer(object):
     """
         A viewer to render an environment.
     """
-    SCREEN_WIDTH = 800
-    SCREEN_HEIGHT = 800
+    SCREEN_WIDTH = 600
+    SCREEN_HEIGHT = 600
     SAVE_IMAGES = False
 
     def __init__(self, env, record_video=True):
@@ -188,8 +188,9 @@ class Scene2dGraphics(object):
         for obstacle in scene.obstacles:
             position = surface.pos2pix(obstacle['position'][0, 0], obstacle['position'][1, 0])
             pygame.draw.circle(surface, Scene2dGraphics.GREY, position, surface.pix(obstacle['radius']), 0)
-        position = surface.pos2pix(scene.goal['position'][0, 0], scene.goal['position'][1, 0])
-        pygame.draw.circle(surface, Scene2dGraphics.GREEN, position, surface.pix(scene.goal['radius']), 0)
+        if scene.goal is not None:
+            position = surface.pos2pix(scene.goal['position'][0, 0], scene.goal['position'][1, 0])
+            pygame.draw.circle(surface, Scene2dGraphics.GREEN, position, surface.pix(scene.goal['radius']), 0)
 
 
 class DynamicsGraphics(object):
@@ -201,20 +202,21 @@ class DynamicsGraphics(object):
     @staticmethod
     def display(dynamics, surface, show_desired_control=False):
         position = surface.pos2pix(dynamics.position[0, 0], dynamics.position[1, 0])
-        pygame.draw.circle(surface, Scene2dGraphics.GREY, position, surface.pix(0.2), 1)
+        color = DynamicsGraphics.RED if dynamics.crashed else DynamicsGraphics.BLUE
+        pygame.draw.circle(surface, color, position, max(surface.pix(0.2), 1), 1)
 
         # Actual control
         control_position = dynamics.position + dynamics.control * \
                            DynamicsGraphics.COMMAND_LENGTH / dynamics.params['acceleration']
         control_pix = surface.pos2pix(control_position[0, 0], control_position[1, 0])
-        pygame.draw.line(surface, DynamicsGraphics.BLUE, position, control_pix)
+        pygame.draw.line(surface, color, position, control_pix)
 
         # Desired control
         if show_desired_control:
             desired_control = dynamics.action_to_control(dynamics.desired_action) / dynamics.params['acceleration']
             control_position = (20, surface.get_height()-20)
             control_destination = (control_position[0] + desired_control[0, 0]*10,
-                                   control_position[1] + -desired_control[1, 0]*10)
+                                   control_position[1] + desired_control[1, 0]*10)
             pygame.draw.circle(surface, DynamicsGraphics.RED, control_position, 4, 1)
             pygame.draw.line(surface, DynamicsGraphics.RED, control_position, control_destination, 2)
 
