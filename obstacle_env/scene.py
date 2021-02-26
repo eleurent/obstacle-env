@@ -20,7 +20,7 @@ class Scene2D(object):
         self.goal = None
         self.create_random_scene()
 
-    def create_random_scene(self, np_random=np.random):
+    def create_random_scene(self, np_random=np.random, with_goal=True):
         self.obstacles = []
         for _ in range(400):
             o = np.zeros((2, 1))
@@ -28,9 +28,12 @@ class Scene2D(object):
                 o = np.array([[self.BOUNDS_X * (np_random.rand() * 2 - 1)],
                               [self.BOUNDS_Y * (np_random.rand() * 2 - 1)]])
             self.obstacles.append({'position': o, 'radius': 1})
-        self.goal = {'position': np.array([[self.BOUNDS_X * (np_random.rand() * 2 - 1)],
-                                           [self.BOUNDS_Y * (np_random.rand() * 2 - 1)]]),
-                     'radius': 1}
+        if with_goal:
+            self.goal = {'position': np.array([[self.BOUNDS_X * (np_random.rand() * 2 - 1)],
+                                               [self.BOUNDS_Y * (np_random.rand() * 2 - 1)]]),
+                         'radius': 1}
+        else:
+            self.goal = None
 
     def create_corridor_scene(self):
         for y in np.linspace(-self.BOUNDS_Y, self.BOUNDS_Y, int(self.BOUNDS_Y)+1):

@@ -24,7 +24,7 @@ class ObstacleEnv(gym.Env):
         "show_grid": False
     }
 
-    def __init__(self):
+    def __init__(self, with_goal=True):
         # Seeding
         self.np_random = None
         self.seed()
@@ -36,7 +36,8 @@ class ObstacleEnv(gym.Env):
 
         # Scene
         self.scene = Scene2D()
-        self.scene.create_random_scene(np_random=self.np_random)
+        self.with_goal = with_goal
+        self.scene.create_random_scene(np_random=self.np_random, with_goal=self.with_goal)
         self.grid = PolarGrid(self.scene, cells=self.config["grid_cells"])
 
         # Spaces
@@ -80,7 +81,7 @@ class ObstacleEnv(gym.Env):
         """
         self.steps = 0
         self.time = 0
-        self.scene.create_random_scene(np_random=self.np_random)
+        self.scene.create_random_scene(np_random=self.np_random, with_goal=self.with_goal)
         self.dynamics.state *= 0
         self.dynamics.crashed = False
         self.dynamics.desired_action = self.np_random.randint(1, len(self.dynamics.ACTIONS))
@@ -199,7 +200,7 @@ class ObstacleEnv(gym.Env):
         """
         if self.config["observation_type"] == "grid":
             velocities = self.dynamics.velocity / self.dynamics.terminal_velocity
-            if self.scene.goal:
+            if self.with_goal:
                 goal = (self.scene.goal["position"] - self.dynamics.position) / 20
             else:
                 goal = self.dynamics.action_to_control(self.dynamics.desired_action) / \
@@ -221,7 +222,7 @@ class ObstacleEnv(gym.Env):
         """
         if self.lpv is not None:
             return self.pessimistic_reward(action, self.lpv.x_i_t)
-        if self.scene.goal:
+        if self.with_goal:
             d = np.linalg.norm(self.scene.goal["position"] - self.dynamics.position)
             d0 = 10
             reward = (action > 0)/(1+d/d0)
@@ -244,7 +245,7 @@ class ObstacleEnv(gym.Env):
                    [interval[0, 0], interval[1, 1]],
                    [interval[1, 0], interval[0, 1]],
                    [interval[1, 0], interval[1, 1]]]
-        if self.scene.goal:
+        if self.with_goal:
             d = np.linalg.norm(self.scene.goal["position"] - np.mean(corners, axis=0)[:, np.newaxis])
             d0 = 10
             reward = (action > 0)/(1+d/d0)
