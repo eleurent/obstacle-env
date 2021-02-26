@@ -77,7 +77,8 @@ class PolarGrid:
                 indexes = np.hstack([np.arange(start, self.cells), np.arange(0, end + 1)])
 
             for index in indexes:
-                direction = self.index_to_direction(index)
+                side = -1 if (index - center_index) % self.cells < self.cells // 2 else 1
+                direction = self.index_to_direction(index+0.5*side)
                 distance = self.distance_to_circle(obstacle['position'] - origin, obstacle['radius'], direction)
                 self.grid[index] = min(self.grid[index], distance)
         return self.grid
