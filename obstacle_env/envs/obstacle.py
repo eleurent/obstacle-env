@@ -21,7 +21,7 @@ class ObstacleEnv(gym.Env):
         "collision_reward": -0.5,
         "observation_type": "grid",
         "observation_noise": 0.3,
-        "show_grid": False
+        "show_grid": True
     }
 
     def __init__(self, with_goal=True):
