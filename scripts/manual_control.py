@@ -12,7 +12,7 @@ def run(episodes=1):
 
     for _ in range(episodes):
         env.reset()
-        env.unwrapped.automatic_rendering_callback = env.video_recorder.capture_frame  # Capture in-between frames
+        env.unwrapped.set_monitor(env)  # to capture in-between frames
         done = False
         while not done:
             action = env.unwrapped.dynamics.desired_action

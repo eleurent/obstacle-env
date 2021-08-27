@@ -52,7 +52,7 @@ class ObstacleEnv(gym.Env):
 
         # Viewer
         self.viewer = None
-        self.automatic_rendering_callback = None
+        self._monitor = None
         self.should_update_rendering = True
         self.rendering_mode = 'human'
         self.enable_auto_render = False
@@ -64,7 +64,6 @@ class ObstacleEnv(gym.Env):
         self.done = False
         self.trajectory = []
         self.interval_trajectory = []
-        self.automatic_record_callback = None
 
     def configure(self, config):
         self.config.update(config)
@@ -142,8 +141,8 @@ class ObstacleEnv(gym.Env):
         if self.viewer is not None and self.enable_auto_render:
             self.should_update_rendering = True
 
-            if self.automatic_rendering_callback:
-                self.automatic_rendering_callback()
+            if self._monitor:
+                self._monitor.video_recorder.capture_frame()
             else:
                 self.render(self.rendering_mode)
 
@@ -277,7 +276,7 @@ class ObstacleEnv(gym.Env):
         result = cls.__new__(cls)
         memo[id(self)] = result
         for k, v in self.__dict__.items():
-            if k not in ['viewer', 'automatic_rendering_callback', 'automatic_record_callback']:
+            if k not in ['viewer', '_monitor']:
                 setattr(result, k, copy.deepcopy(v, memo))
             else:
                 setattr(result, k, None)
